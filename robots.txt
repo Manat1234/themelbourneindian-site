@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://themelbourneindian.com.au/sitemap.xml
