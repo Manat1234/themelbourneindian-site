@@ -80,7 +80,7 @@ def head_tags(title, desc, url, image, kind="website", lang="en", extra=""):
             f'<meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="{esc(url)}">'
             f'<meta property="og:image" content="{esc(image)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
             f'<meta property="og:locale" content="{LOCALE.get(lang, "en_AU")}"><meta name="twitter:card" content="summary_large_image">'
-            f'<link rel="icon" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">'
+            f'<meta name="robots" content="max-image-preview:large"><link rel="icon" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">'
             f'<link rel="alternate" type="application/rss+xml" title="{NAME}" href="/feed.xml">{pwa.HEAD}{extra}')
 
 def clean_template(t):
@@ -97,6 +97,20 @@ def page(template, site, head):
     m = re.search(r'(<script id="snapshot" type="application/json">)(.*?)(</script>)', h, re.S)
     return pwa.inject(h[:m.start(2)] + json.dumps(site, ensure_ascii=False, sort_keys=True).replace("<", "\\u003c") + h[m.end(2):])
 
+MEL = dt.timezone(dt.timedelta(hours=11))  # AEDT; good enough for publication timestamps
+def iso(v):
+    """Full ISO 8601 timestamp in Melbourne time ('2026-11-09' -> 9am that day)."""
+    if not v: return ""
+    try:
+        if len(v) == 10: return dt.datetime.fromisoformat(v).replace(hour=9, tzinfo=MEL).isoformat()
+        return dt.datetime.fromisoformat(v.replace("Z", "+00:00")).astimezone(MEL).isoformat(timespec="seconds")
+    except Exception: return v
+PUBLISHER = {"@type": "NewsMediaOrganization", "name": NAME, "url": SITE + "/",
+             "logo": {"@type": "ImageObject", "url": SITE + "/icons/icon-512.png", "width": 512, "height": 512},
+             "publishingPrinciples": SITE + "/standards/", "correctionsPolicy": SITE + "/standards/",
+             "ethicsPolicy": SITE + "/standards/", "masthead": SITE + "/about/"}
+PAGES = {"about": ("About us", "about"), "standards": ("Editorial standards", "standards"), "advertise": ("Advertise with us", "advertise")}
+
 def V(a, l): return a.get(l) if (a.get(l) or {}).get("headline") else None
 
 def main():
@@ -106,8 +120,18 @@ def main():
     json.dump(site, open(P("data", "site.json"), "w", encoding="utf-8"), ensure_ascii=False, sort_keys=True)
     tpl = clean_template(open(P("tools", "app-page.html"), encoding="utf-8").read())
     assert 'noindex' not in tpl
-    open(P("index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(NAME, TAG, SITE + "/", SITE + "/og/site.jpg")))
+    org = dict(PUBLISHER, **{"@context": "https://schema.org", "description": TAG, "email": "news@themelbourneindian.com.au", "areaServed": "Melbourne, Victoria, Australia", "inLanguage": ["en", "hi", "pa"]})
+    org_ld = '<script type="application/ld+json">' + json.dumps(org, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
+    open(P("index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(NAME, TAG, SITE + "/", SITE + "/og/site.jpg", extra=org_ld)))
     urls = [(SITE + "/", site.get("builtAt", "")[:10])]
+    for key, (title, path) in PAGES.items():  # crawlable copies of the About / Standards / Advertise pages
+        body = (site.get("pages") or {}).get(key)
+        if not body: continue
+        m = re.search(r'<p class="dek">(.*?)</p>', body, re.S); desc = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else TAG
+        extra = f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#en-p-{key}')</script>"
+        os.makedirs(P(path), exist_ok=True)
+        open(P(path, "index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(f"{title} · {NAME}", desc, f"{SITE}/{path}/", SITE + "/og/site.jpg", extra=extra)))
+        urls.append((f"{SITE}/{path}/", site.get("builtAt", "")[:10]))
     keep = set()
     for a in site["articles"]:
         langs = [l for l in ("en", "hi", "pa") if V(a, l)]
@@ -116,10 +140,10 @@ def main():
             img = SITE + "/" + (a["image"]["og"] if a.get("image") else "og/site.jpg")
             alts = "".join(f'<link rel="alternate" hreflang="{x}" href="{SITE}/{x}/{a["slug"]}/">' for x in langs) if len(langs) > 1 else ""
             ld = {"@context": "https://schema.org", "@type": "NewsArticle", "headline": v["headline"][:110], "description": v.get("dek", ""),
-                  "image": [img], "datePublished": a.get("date"), "dateModified": (a.get("updated") or a.get("date") or "")[:19],
-                  "inLanguage": l, "mainEntityOfPage": url, "author": {"@type": "Organization", "name": a.get("byline") or f"{NAME} newsroom"},
-                  "publisher": {"@type": "Organization", "name": NAME, "logo": {"@type": "ImageObject", "url": SITE + "/apple-touch-icon.png"}}}
-            extra = (alts + f'<meta property="article:published_time" content="{esc(a.get("date"))}">'
+                  "image": [img], "datePublished": iso(a.get("approvedAt") or a.get("date")), "dateModified": iso(a.get("updated") or a.get("approvedAt") or a.get("date")),
+                  "inLanguage": l, "mainEntityOfPage": url, "author": {"@type": "Organization", "name": a.get("byline") or f"{NAME} newsroom", "url": SITE + "/about/"},
+                  "publisher": PUBLISHER, "isAccessibleForFree": True}
+            extra = (alts + f'<meta property="article:published_time" content="{esc(iso(a.get("approvedAt") or a.get("date")))}">'
                      + '<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
                      + f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#{l}-a-{a['slug']}')</script>")
             head = head_tags(f"{v['headline']} · {NAME}", v.get("dek", ""), url, img, "article", l, extra)
@@ -133,7 +157,19 @@ def main():
     sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     sm += [f"<url><loc>{esc(u)}</loc>" + (f"<lastmod>{m}</lastmod>" if m else "") + "</url>" for u, m in urls]
     open(P("sitemap.xml"), "w", encoding="utf-8").write("\n".join(sm + ["</urlset>"]) + "\n")
-    open(P("robots.txt"), "w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE}/sitemap.xml\n")
+    open(P("robots.txt"), "w").write(f"User-agent: *\nAllow: /\nSitemap: {SITE}/sitemap.xml\nSitemap: {SITE}/news-sitemap.xml\n")
+    # Google News sitemap: stories published in the last 2 days (Google's rule), in every reviewed language
+    cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=2)
+    ns = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9">']
+    for a in site["articles"]:
+        when = iso(a.get("approvedAt") or a.get("date"))
+        try: recent = dt.datetime.fromisoformat(when) >= cutoff
+        except Exception: recent = False
+        if not recent: continue
+        for l in ("en", "hi", "pa"):
+            v = V(a, l)
+            if v: ns.append(f"<url><loc>{SITE}/{l}/{a['slug']}/</loc><news:news><news:publication><news:name>{NAME}</news:name><news:language>{l}</news:language></news:publication><news:publication_date>{when}</news:publication_date><news:title>{esc(v['headline'])}</news:title></news:news></url>")
+    open(P("news-sitemap.xml"), "w", encoding="utf-8").write("\n".join(ns + ["</urlset>"]) + "\n")
     items = sorted([a for a in site["articles"] if V(a, "en")], key=lambda a: (a.get("date") or "", a.get("updated") or ""), reverse=True)[:30]
     def rfc(d):
         try: return format_datetime(dt.datetime.fromisoformat(d[:10]).replace(hour=9, tzinfo=dt.timezone(dt.timedelta(hours=11))))
