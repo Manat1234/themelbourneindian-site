@@ -109,7 +109,8 @@ PUBLISHER = {"@type": "NewsMediaOrganization", "name": NAME, "url": SITE + "/",
              "logo": {"@type": "ImageObject", "url": SITE + "/icons/icon-512.png", "width": 512, "height": 512},
              "publishingPrinciples": SITE + "/standards/", "correctionsPolicy": SITE + "/standards/",
              "ethicsPolicy": SITE + "/standards/", "masthead": SITE + "/about/"}
-PAGES = {"about": ("About us", "about"), "standards": ("Editorial standards", "standards"), "advertise": ("Advertise with us", "advertise")}
+PAGES = {"about": ("About us", "about"), "standards": ("Editorial standards", "standards"), "advertise": ("Advertise with us", "advertise"), "privacy": ("Privacy policy", "privacy"), "directory": ("Business directory", "directory")}
+DIR_DESC = "Local businesses, places of worship and community organisations serving Melbourne's Indian communities."
 
 def V(a, l): return a.get(l) if (a.get(l) or {}).get("headline") else None
 
@@ -125,9 +126,9 @@ def main():
     open(P("index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(NAME, TAG, SITE + "/", SITE + "/og/site.jpg", extra=org_ld)))
     urls = [(SITE + "/", site.get("builtAt", "")[:10])]
     for key, (title, path) in PAGES.items():  # crawlable copies of the About / Standards / Advertise pages
-        body = (site.get("pages") or {}).get(key)
+        body = (site.get("pages") or {}).get(key) or (DIR_DESC if key == "directory" else None)
         if not body: continue
-        m = re.search(r'<p class="dek">(.*?)</p>', body, re.S); desc = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else TAG
+        m = re.search(r'<p class="dek">(.*?)</p>', body, re.S); desc = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else (DIR_DESC if key == "directory" else TAG)
         extra = f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#en-p-{key}')</script>"
         os.makedirs(P(path), exist_ok=True)
         open(P(path, "index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(f"{title} · {NAME}", desc, f"{SITE}/{path}/", SITE + "/og/site.jpg", extra=extra)))
