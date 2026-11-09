@@ -746,11 +746,17 @@ function viewHome(r) {
   // hero: the desk's "Lead story" first (if it has a photo), then the newest story (JUST IN while under 24 hours old),
   // then the most important stories by desk priority
   const pubAt = a => Date.parse(a.approvedAt || ((a.date || '1970-01-01') + 'T00:00:00+11:00')) || 0;
-  const newest = [...pool].sort((a, b) => pubAt(b) - pubAt(a))[0];
-  const pinned = pool.filter(a => a.featured && a.image && a.image.url).sort((a, b) => pubAt(b) - pubAt(a))[0];
-  const impact = pool.filter(a => a !== newest && a !== pinned && a.image && a.image.url).sort((a, b) => (b.priority || 0) - (a.priority || 0) || pubAt(b) - pubAt(a));
-  const leads = [...new Set([pinned, newest, ...impact])].filter(Boolean).slice(0, 4);
-  const fresh = Date.now() - pubAt(newest) < 24 * 3600e3;
+  // Only front-page-worthy stories go in the carousel: desk priority 9 or 10 (out of 10), with a photo.
+  // JUST IN is reserved for hard news (type "news") at priority 9+, under 24 hours old. Guides and explainers never get it.
+  const HERO_MIN = 9;
+  const byPri = (a, b) => (b.priority || 0) - (a.priority || 0) || pubAt(b) - pubAt(a);
+  const hasImg = a => a.image && a.image.url;
+  const worthy = a => hasImg(a) && (a.priority || 0) >= HERO_MIN;
+  const pinned = pool.filter(a => a.featured && hasImg(a)).sort((a, b) => pubAt(b) - pubAt(a))[0];
+  const newest = pool.filter(a => worthy(a) && (a.type || 'news') === 'news').sort((a, b) => pubAt(b) - pubAt(a))[0];
+  let leads = [...new Set([pinned, newest, ...pool.filter(worthy).sort(byPri)])].filter(Boolean).slice(0, 4);
+  if (leads.length < 2) leads = [...new Set([...leads, ...pool.filter(hasImg).sort(byPri)])].slice(0, 2);  // quiet day: never fewer than two slides
+  const fresh = !!newest && Date.now() - pubAt(newest) < 24 * 3600e3;
   const flash = `<span class="flash${fresh ? ' is-live' : ''}"><i aria-hidden="true"></i>${esc(fresh ? ({ en: 'Just in', hi: 'अभी-अभी', pa: 'ਹੁਣੇ-ਹੁਣੇ' }[l] || 'Just in') : t.latest)}</span>`;
   const topTag = `<span class="flash"><i aria-hidden="true"></i>${esc({ en: 'Top story', hi: 'मुख्य ख़बर', pa: 'ਮੁੱਖ ਖ਼ਬਰ' }[l] || 'Top story')}</span>`;
   const rest = pool.filter(a => !leads.includes(a));
@@ -1033,7 +1039,7 @@ ${S.ui.confirm === 'archive' ? `<div class="confirm">Archive this story? It will
 <div class="field" style="margin-top:8px"><label for="e-rn">Risk note</label><textarea id="e-rn" name="risk_note" style="min-height:70px">${esc(a.risk_note || '')}</textarea></div>
 <div class="field" style="margin-top:8px"><label for="e-dn">Desk note (internal)</label><textarea id="e-dn" name="desk_note" style="min-height:70px">${esc(a.desk_note || '')}</textarea></div>
 <div class="field" style="margin-top:8px"><label for="e-by">Byline</label><input id="e-by" name="byline" type="text" value="${esc(a.byline || 'The Melbourne Indian newsroom')}"></div>
-<div class="row2" style="margin-top:8px"><div class="field"><label for="e-date">Date</label><input id="e-date" name="date" type="date" value="${esc(a.date || today())}"></div><div class="field"><label for="e-pri">Priority</label><input id="e-pri" name="priority" type="number" min="0" max="10" value="${esc(a.priority ?? 5)}"></div></div>
+<div class="row2" style="margin-top:8px"><div class="field"><label for="e-date">Date</label><input id="e-date" name="date" type="date" value="${esc(a.date || today())}"></div><div class="field"><label for="e-pri">Priority</label><input id="e-pri" name="priority" type="number" min="0" max="10" value="${esc(a.priority ?? 5)}"><small>9 or 10 puts it in the front-page carousel (big news only). Hard news at 9+ gets JUST IN for 24 hours.</small></div></div>
 <label class="check" style="margin-top:8px"><input type="checkbox" name="featured" ${a.featured ? 'checked' : ''}> Lead story on the front page</label>
 <div class="row2" style="margin-top:8px"><div class="field"><label for="e-fv">Graphic figure</label><input id="e-fv" name="fig_value" type="text" value="${esc(a.figure?.value || '')}"></div><div class="field"><label for="e-fl">Figure label (EN)</label><input id="e-fl" name="fig_en" type="text" value="${esc(a.figure?.en || '')}"></div></div>
 </div>
