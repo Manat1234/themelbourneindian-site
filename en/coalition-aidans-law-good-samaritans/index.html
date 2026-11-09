@@ -727,7 +727,7 @@ ${ticker}
 <div><h3>${esc(t.publication)}</h3><ul><li><a href="${href.page(l, 'about')}">${esc(t.about)}</a></li><li><a href="${href.page(l, 'standards')}">${esc(t.standards)}</a></li><li><a href="${href.page(l, 'contact')}">${esc(t.contact)}</a></li><li><a href="${href.page(l, 'newsletter')}">${esc(t.newsletter)}</a></li></ul></div>
 <div><h3>${esc(t.workWith)}</h3><ul><li><a href="${href.page(l, 'advertise')}">${esc(t.advertise)}</a></li><li><a href="${href.page(l, 'directory')}">${esc(t.directory)}</a></li></ul><h3 style="margin-top:16px">${esc(t.editions)}</h3><ul>${LANGS.map(x => `<li><a href="${href.home(x)}" lang="${x}">${LANG_FULL[x]}</a></li>`).join('')}</ul></div>
 </div>
-<div class="foot-bottom"><span>© ${today().slice(0, 4)} The Melbourne Indian. Independent and free to read.</span><span>Working name; business registration pending.</span></div>
+<div class="foot-bottom"><span>© ${today().slice(0, 4)} The Melbourne Indian. Independent and free to read.</span></div>
 </div></footer>`;
 }
 
