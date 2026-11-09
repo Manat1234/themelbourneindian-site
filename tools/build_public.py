@@ -93,7 +93,7 @@ def page(template, site, head):
                          '<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">' + head, 1)
     assert head in h
     m = re.search(r'(<script id="snapshot" type="application/json">)(.*?)(</script>)', h, re.S)
-    return h[:m.start(2)] + json.dumps(site, ensure_ascii=False).replace("<", "\\u003c") + h[m.end(2):]
+    return h[:m.start(2)] + json.dumps(site, ensure_ascii=False, sort_keys=True).replace("<", "\\u003c") + h[m.end(2):]
 
 def V(a, l): return a.get(l) if (a.get(l) or {}).get("headline") else None
 
@@ -101,7 +101,7 @@ def main():
     site = json.load(open(P("data", "site.json"), encoding="utf-8"))
     site["articles"] = [a for a in site["articles"] if a.get("status") == "published"]
     build_images(site); build_brand()
-    json.dump(site, open(P("data", "site.json"), "w", encoding="utf-8"), ensure_ascii=False)
+    json.dump(site, open(P("data", "site.json"), "w", encoding="utf-8"), ensure_ascii=False, sort_keys=True)
     tpl = clean_template(open(P("tools", "app-page.html"), encoding="utf-8").read())
     assert 'noindex' not in tpl
     open(P("index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(NAME, TAG, SITE + "/", SITE + "/og/site.jpg")))
