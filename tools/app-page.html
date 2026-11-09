@@ -856,6 +856,7 @@ function viewArticle(r) {
 }
 
 /* ---------- forms (public) ---------- */
+const FORM_ENDPOINT = 'https://formsubmit.co/ajax/';
 const FORMS = {
   subscribe: { coll: 'subscribers', subject: 'Newsletter subscription', to: NEWS,
     fields: [['email', 'Email address', 'email', true], ['name', 'Your name (optional)', 'text', false]],
@@ -881,7 +882,7 @@ function formHtml(kind) {
     else input = `<input id="${id}" name="${n}" type="${type}"${req ? ' required' : ''}${type === 'email' ? ' autocomplete="email"' : ''}>`;
     return `<div class="field"><label for="${id}">${esc(lab)}</label>${input}</div>`;
   }).join('');
-  return `<form class="form" data-form="${kind}" novalidate>${fields}${f.extra || ''}<label class="check"><input type="checkbox" name="consent" id="f-${kind}-consent" required> <span>${esc(f.consent)}</span></label><div><button class="btn" type="submit">Send</button></div><div class="out" aria-live="polite"></div></form>`;
+  return `<form class="form" data-form="${kind}" novalidate>${fields}${f.extra || ''}<input type="text" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0"><label class="check"><input type="checkbox" name="consent" id="f-${kind}-consent" required> <span>${esc(f.consent)}</span></label><div><button class="btn" type="submit">Send</button></div><div class="out" aria-live="polite"></div></form>`;
 }
 async function submitForm(form) {
   const kind = form.dataset.form; const f = FORMS[kind]; const out = form.querySelector('.out');
@@ -896,8 +897,22 @@ async function submitForm(form) {
     try { await S.db.doc(`${f.coll}/${S.uid}`).set(rec); form.reset(); out.innerHTML = `<p class="status ok">Thank you. We've received your ${esc(f.subject.toLowerCase())}.</p>`; return; }
     catch (e) { if (e && e.code === 'invalid_argument') S.canWrite = false; }
   }
+  const honey = rec._honey; delete rec._honey;
+  const thanks = `<p class="status ok">Thank you. We've received your ${esc(f.subject.toLowerCase())}.</p>`;
+  if (honey) { form.reset(); out.innerHTML = thanks; return; }
   const body = Object.entries(rec).filter(([k]) => !['consent', 'consentText', 'status', 'page', 'submittedAt'].includes(k)).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('\n');
-  out.innerHTML = `<div class="status err" style="color:var(--ink)"><p style="margin:0 0 8px">To send this, please email <strong>${f.to}</strong> with these details:</p><pre class="copytxt" style="white-space:pre-wrap;font:14px/1.4 var(--sans);margin:0 0 8px">${esc(body)}</pre><div class="copybox"><code>${f.to}</code><button type="button" class="btn sm ghost" data-act="copy-form">Copy details</button></div></div>`;
+  const btn = form.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    const payload = { ...rec, editions: Array.isArray(rec.editions) ? rec.editions.join(', ') : rec.editions, consent: 'Yes: ' + f.consent, _subject: `${f.subject} (website)`, _template: 'table', _captcha: 'false' };
+    delete payload.consentText; delete payload.status;
+    if (rec.email) payload._replyto = rec.email;
+    const res = await fetch(FORM_ENDPOINT + f.to, { method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(payload) });
+    const j = await res.json().catch(() => ({}));
+    if (res.ok && (j.success === true || j.success === 'true')) { form.reset(); out.innerHTML = thanks; if (btn) { btn.disabled = false; btn.textContent = 'Send'; } return; }
+  } catch (e) { }
+  if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+  const mail = `mailto:${f.to}?subject=${encodeURIComponent(f.subject)}&body=${encodeURIComponent(body)}`;
+  out.innerHTML = `<div class="status err" style="color:var(--ink)"><p style="margin:0 0 8px">We couldn't send that from the website just now. Tap below to send it from your email instead, with your details already filled in.</p><p style="margin:0 0 8px"><a class="btn sm" href="${mail}">Send by email</a></p><pre class="copytxt" style="white-space:pre-wrap;font:14px/1.4 var(--sans);margin:0 0 8px">${esc(body)}</pre><div class="copybox"><code>${f.to}</code><button type="button" class="btn sm ghost" data-act="copy-form">Copy details</button></div></div>`;
 }
 function viewPage(r) {
   const l = r.lang, t = T[l], p = r.page;
