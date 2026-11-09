@@ -5,12 +5,14 @@ Input : data/site.json (published stories only) and images/<name>.jpg (original 
         tools/app-page.html (the single-page app, public-site version)
 Output: index.html, <lang>/<slug>/index.html (one page per story, with link-preview tags),
         img/*.webp (resized photos), og/*.jpg (1200x630 share cards), sitemap.xml, robots.txt,
-        feed.xml (English RSS), favicon.png, apple-touch-icon.png
+        feed.xml (English RSS), favicon.png, apple-touch-icon.png,
+        manifest.webmanifest, sw.js, icons/ (installable app; see tools/pwa.py)
 Run from the repo root:  python3 tools/build_public.py
 """
 import datetime as dt, html, json, os, re, shutil
 from email.utils import format_datetime
 from PIL import Image, ImageDraw, ImageFont
+import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import pwa
 
 SITE = "https://themelbourneindian.com.au"
 NAME = "The Melbourne Indian"
@@ -69,7 +71,7 @@ def build_brand():
         d.text((300, 350), "Indian.", font=font(True, 84), fill="#EF9D6D")
         d.text((92, 520), "Indian roots. Melbourne stories.  English · Hindi · Punjabi", font=font(False, 34), fill="#A9BAB0")
         im.save(P("og", "site.jpg"), "JPEG", quality=88)
-    roundel(64).save(P("favicon.png")); roundel(180).convert("RGB").save(P("apple-touch-icon.png"))
+    roundel(64).save(P("favicon.png")); pwa.build_icons(roundel, P)
 
 def head_tags(title, desc, url, image, kind="website", lang="en", extra=""):
     return (f'<base href="/"><title>{esc(title)}</title><meta name="description" content="{esc(desc)}">'
@@ -79,7 +81,7 @@ def head_tags(title, desc, url, image, kind="website", lang="en", extra=""):
             f'<meta property="og:image" content="{esc(image)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
             f'<meta property="og:locale" content="{LOCALE.get(lang, "en_AU")}"><meta name="twitter:card" content="summary_large_image">'
             f'<link rel="icon" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">'
-            f'<link rel="alternate" type="application/rss+xml" title="{NAME}" href="/feed.xml">{extra}')
+            f'<link rel="alternate" type="application/rss+xml" title="{NAME}" href="/feed.xml">{pwa.HEAD}{extra}')
 
 def clean_template(t):
     pre, sep, post = t.partition('<template id="headbits">')
@@ -93,7 +95,7 @@ def page(template, site, head):
                          '<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">' + head, 1)
     assert head in h
     m = re.search(r'(<script id="snapshot" type="application/json">)(.*?)(</script>)', h, re.S)
-    return h[:m.start(2)] + json.dumps(site, ensure_ascii=False, sort_keys=True).replace("<", "\\u003c") + h[m.end(2):]
+    return pwa.inject(h[:m.start(2)] + json.dumps(site, ensure_ascii=False, sort_keys=True).replace("<", "\\u003c") + h[m.end(2):])
 
 def V(a, l): return a.get(l) if (a.get(l) or {}).get("headline") else None
 
@@ -142,7 +144,8 @@ def main():
         u = f"{SITE}/en/{a['slug']}/"
         rss.append(f"<item><title>{esc(a['en']['headline'])}</title><link>{u}</link><guid>{u}</guid><description>{esc(a['en'].get('dek',''))}</description><pubDate>{rfc(a.get('date',''))}</pubDate></item>")
     open(P("feed.xml"), "w", encoding="utf-8").write("\n".join(rss + ["</channel></rss>"]) + "\n")
-    print(f"built: {len(site['articles'])} stories, {len(urls)-1} story pages")
+    pwa.write(P, NAME, TAG, open(P("index.html"), encoding="utf-8").read())
+    print(f"built: {len(site['articles'])} stories, {len(urls)-1} story pages, app manifest + service worker")
 
 if __name__ == "__main__":
     main()

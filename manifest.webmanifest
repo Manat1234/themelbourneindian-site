@@ -1,0 +1,61 @@
+{
+ "id": "/",
+ "name": "The Melbourne Indian",
+ "short_name": "Melb Indian",
+ "description": "Independent, free-to-read news for Melbourne's Indian communities in English, Hindi and Punjabi.",
+ "lang": "en-AU",
+ "dir": "ltr",
+ "start_url": "/?source=app",
+ "scope": "/",
+ "display": "standalone",
+ "orientation": "portrait-primary",
+ "background_color": "#FAF8F3",
+ "theme_color": "#FAF8F3",
+ "categories": [
+  "news"
+ ],
+ "icons": [
+  {
+   "src": "/icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "/icons/icon-maskable-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ],
+ "shortcuts": [
+  {
+   "name": "हिन्दी संस्करण",
+   "short_name": "हिन्दी",
+   "url": "/?source=app#hi",
+   "icons": [
+    {
+     "src": "/icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  },
+  {
+   "name": "ਪੰਜਾਬੀ ਐਡੀਸ਼ਨ",
+   "short_name": "ਪੰਜਾਬੀ",
+   "url": "/?source=app#pa",
+   "icons": [
+    {
+     "src": "/icons/icon-192.png",
+     "sizes": "192x192"
+    }
+   ]
+  }
+ ]
+}
