@@ -108,7 +108,8 @@ def iso(v):
 PUBLISHER = {"@type": "NewsMediaOrganization", "name": NAME, "url": SITE + "/",
              "logo": {"@type": "ImageObject", "url": SITE + "/icons/icon-512.png", "width": 512, "height": 512},
              "publishingPrinciples": SITE + "/standards/", "correctionsPolicy": SITE + "/standards/",
-             "ethicsPolicy": SITE + "/standards/", "masthead": SITE + "/about/"}
+             "ethicsPolicy": SITE + "/standards/", "masthead": SITE + "/about/",
+             "sameAs": ["https://www.facebook.com/themelbourneindian"]}
 PAGES = {"about": ("About us", "about"), "standards": ("Editorial standards", "standards"), "advertise": ("Advertise with us", "advertise"), "privacy": ("Privacy policy", "privacy"), "directory": ("Business directory", "directory")}
 DIR_DESC = "Local businesses, places of worship and community organisations serving Melbourne's Indian communities."
 
