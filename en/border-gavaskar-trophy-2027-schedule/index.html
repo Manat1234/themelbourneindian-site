@@ -1348,6 +1348,7 @@ function render(soft) {
   lastKey = key;
   initHero();
   initTicker();
+  if (typeof statsPage === 'function') statsPage();
 }
 /* ================= share: copy link ================= */
 document.addEventListener('click', async ev => {
@@ -1393,6 +1394,42 @@ document.addEventListener('click', ev => {
     heroHold(h);
   }
 });
+/* ================= audience stats (Umami Cloud, cookie-free; off until STATS_ID is set) ================= */
+const STATS_ID = '';
+const STATS_SRC = 'https://cloud.umami.is/script.js';
+let statsLast = '';
+function statsUrl(r) {
+  if (r.view === 'article') return `/${r.lang}/${r.slug}/`;
+  if (r.view === 'section') return `/${r.lang}/section/${r.sec}/`;
+  if (r.view === 'page') return `/${r.lang}/${r.page}/`;
+  return r.lang === 'en' ? '/' : `/${r.lang}/`;
+}
+function statsOff() {
+  if (!STATS_ID || S.isEditor || previewMode()) return true;
+  try { if (/[?&]me=1\b/.test(location.search)) localStorage.setItem('umami.disabled', '1'); if (localStorage.getItem('umami.disabled')) return true; } catch {}
+  return false;
+}
+function statsPage() {
+  if (statsOff() || !window.umami) return;
+  const r = route(); if (r.view === 'desk') return;
+  const u = statsUrl(r); if (u === statsLast) return; statsLast = u;
+  const q = location.search || '';
+  window.umami.track(p => ({ ...p, url: u + q, title: document.title, referrer: statsLast ? p.referrer : document.referrer }));
+}
+function statsEvent(name, data) { if (statsOff() || !window.umami) return; try { window.umami.track(name, data || {}); } catch {} }
+if (!statsOff()) {
+  const sc = document.createElement('script'); sc.defer = true; sc.src = STATS_SRC;
+  sc.setAttribute('data-website-id', STATS_ID); sc.setAttribute('data-auto-track', 'false'); sc.setAttribute('data-domains', 'themelbourneindian.com.au,www.themelbourneindian.com.au');
+  sc.onload = statsPage; document.head.appendChild(sc);
+  window.addEventListener('hashchange', () => setTimeout(statsPage, 50));
+}
+document.addEventListener('click', ev => {
+  const a = ev.target.closest('a,button'); if (!a) return;
+  const h = a.getAttribute('href') || '';
+  if (a.closest('.share')) statsEvent('Share', { how: h.includes('wa.me') ? 'whatsapp' : h.includes('facebook.com') ? 'facebook' : a.hasAttribute('data-share-copy') ? 'copy-link' : 'other', lang: route().lang });
+  else if (/^#(en|hi|pa)$/.test(h) && a.closest('.langs,.lang-switch,nav,header')) statsEvent('Language', { to: h.slice(1) });
+  else if (/^https?:/.test(h) && !h.includes('themelbourneindian.com.au')) { try { statsEvent('Outbound', { host: new URL(h).hostname }); } catch {} }
+}, true);
 /* ================= free-subscribe nudge (public readers only) ================= */
 const NUDGE_SUB = 'tmi_subscribed', NUDGE_SKIP = 'tmi_nudge_dismissed', NUDGE_DAYS = 14, NUDGE_DELAY = 35000, NUDGE_SCROLL = 0.5;
 const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
@@ -1401,6 +1438,7 @@ let nudgeShown = false, nudgeTimer = null;
 function subDone(kind, form) {
   if (kind !== 'subscribe' && kind !== 'nudge') return;
   lsSet(NUDGE_SUB, new Date().toISOString());
+  statsEvent('Subscribe', { where: kind === 'nudge' ? 'pop-up' : 'newsletter page', lang: route().lang });
   const n = form.closest('.nudge');
   if (n) { n.classList.add('done'); setTimeout(() => nudgeHide(false), 4500); }
   else nudgeHide(false);
@@ -1428,12 +1466,12 @@ function nudgeShow() {
 <div class="nudge-row"><input type="email" name="email" required autocomplete="email" inputmode="email" placeholder="you@email.com" aria-label="Email address"><button class="btn" type="submit" data-label="${esc(t.subscribe)}">${esc(t.subscribe)}</button></div>
 <p class="nudge-fine" lang="en">Free. One short email a week. Unsubscribe anytime. By subscribing you agree to receive it.</p>
 <div class="out" aria-live="polite"></div></form>`;
-  document.body.appendChild(el);
+  document.body.appendChild(el); statsEvent('Pop-up shown', { lang: l, page: route().view });
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('is-on')));
 }
 function nudgeHide(dismissed) {
   const el = document.querySelector('.nudge'); if (!el) return;
-  if (dismissed) lsSet(NUDGE_SKIP, new Date().toISOString());
+  if (dismissed) { lsSet(NUDGE_SKIP, new Date().toISOString()); statsEvent('Pop-up closed'); }
   el.classList.remove('is-on'); setTimeout(() => el.remove(), 400);
 }
 function nudgeArm() {
