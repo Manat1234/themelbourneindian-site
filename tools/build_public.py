@@ -134,6 +134,35 @@ def main():
         os.makedirs(P(path), exist_ok=True)
         open(P(path, "index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(f"{title} · {NAME}", desc, f"{SITE}/{path}/", SITE + "/og/site.jpg", extra=extra)))
         urls.append((f"{SITE}/{path}/", site.get("builtAt", "")[:10]))
+    # one crawlable page per directory listing, with LocalBusiness structured data
+    LDT = {"Restaurants & takeaway": "Restaurant", "Sweets & bakeries": "Bakery", "Groceries": "GroceryStore", "Fashion & bridal": "ClothingStore",
+           "Health": "MedicalClinic", "Migration & education": "ProfessionalService", "Accounting & finance": "AccountingService", "Real estate": "RealEstateAgent",
+           "Driving schools": "DrivingSchool", "Travel": "TravelAgency", "Community organisations": "Organization", "Weddings & photography": "LocalBusiness"}
+    dkeep = set()
+    for d in [x for x in site.get("directory") or [] if x.get("status") == "approved"]:
+        sl = d.get("slug") or d.get("_id")
+        if not sl or not re.fullmatch(r"[a-z0-9-]+", sl): continue
+        dkeep.add(sl); url = f"{SITE}/directory/{sl}/"
+        subs = [x for x in (d.get("suburbs") or [d.get("suburb")]) if x]
+        cat = d.get("category", "")
+        typ = LDT.get(cat) or ("PlaceOfWorship" if re.search(r"gurdwara|gurudwara|sikh", (d["business"] + d.get("description", "")).lower()) else "HinduTemple" if cat == "Temples & gurdwaras" else "LocalBusiness")
+        ld = {"@context": "https://schema.org", "@type": typ, "name": d["business"], "description": d.get("description", ""), "url": url}
+        if d.get("website"): ld["sameAs"] = [d["website"]]
+        if d.get("phone"): ld["telephone"] = d["phone"]
+        locs = [x for x in d.get("locations") or [] if x.get("address")]
+        if len(locs) == 1: ld["address"] = {"@type": "PostalAddress", "streetAddress": locs[0]["address"].split(",")[0], "addressLocality": locs[0]["suburb"], "addressRegion": "VIC", "addressCountry": "AU"}
+        elif subs: ld["areaServed"] = [{"@type": "Place", "name": f"{x}, Victoria"} for x in subs]
+        if len(locs) == 1 and locs[0].get("phone") and not d.get("phone"): ld["telephone"] = locs[0]["phone"]
+        where = ", ".join(subs[:3]) or "Melbourne"
+        desc = f"{d.get('description', '').rstrip('.')}. {where}. Listed in The Melbourne Indian's directory of businesses and community organisations."
+        extra = ('<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
+                 + f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#en-d-{sl}')</script>")
+        os.makedirs(P("directory", sl), exist_ok=True)
+        open(P("directory", sl, "index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(f"{d['business']}, {subs[0] if subs else 'Melbourne'} · Business directory · {NAME}", desc, url, SITE + "/og/site.jpg", extra=extra)))
+        urls.append((url, (d.get("updated") or "")[:10]))
+    if os.path.isdir(P("directory")):
+        for x in os.listdir(P("directory")):
+            if os.path.isdir(P("directory", x)) and x not in dkeep: shutil.rmtree(P("directory", x))
     keep = set()
     for a in site["articles"]:
         langs = [l for l in ("en", "hi", "pa") if V(a, l)]

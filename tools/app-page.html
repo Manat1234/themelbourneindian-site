@@ -462,6 +462,40 @@ textarea{min-height:110px;resize:vertical}
 
 /* ---------- directory: featured listings ---------- */
 .dir-card.is-featured{border-color:var(--saffron);box-shadow:inset 0 3px 0 var(--saffron)}
+.dir-page{padding-block:28px 50px}
+.dir-head{max-width:760px}
+.dir-head h1{font-size:clamp(32px,4.4vw,50px);margin-bottom:10px}
+.dir-head .dek{font-size:19px;color:var(--ink2);margin:0}
+.dir-tools{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:10px;margin:22px 0 10px}
+.dir-tools label{display:block;font:700 12px/1.2 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.dir-tools input,.dir-tools select{font:400 16px/1.2 var(--sans);padding:11px 12px;border:1px solid var(--rule2);border-radius:2px;background:var(--surface);color:var(--ink);width:100%;min-width:0}
+.dir-tools input:focus,.dir-tools select:focus{outline:2px solid var(--focus);outline-offset:1px}
+.dir-count{color:var(--muted);font-size:14px;margin:0 0 14px}
+.dir-grid .dir-card{display:flex;flex-direction:column}
+.dir-card h3 a{color:inherit;text-decoration:none}
+.dir-card h3 a:hover{text-decoration:underline}
+.dir-where{font-size:14px;color:var(--ink2);margin:0 0 6px}
+.dir-card .dir-desc{font-size:15px;line-height:1.45;margin:0 0 4px}
+.dir-act{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14.5px;margin:auto 0 0;padding-top:10px}
+.dir-act a{color:var(--s-education);font-weight:600}
+.dir-src{font-size:12px;line-height:1.4;color:var(--muted);margin:10px 0 0;padding-top:8px;border-top:1px solid var(--rule)}
+.dir-src a{color:inherit}
+.dir-none{padding:24px;border:1px dashed var(--rule2);text-align:center;color:var(--ink2)}
+.dir-more{margin-top:40px;max-width:760px}
+.dir-back{font-size:15px;margin:0 0 14px}
+.dir-facts{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px 18px;margin:22px 0;font-size:17px}
+.dir-facts dt{font:700 13px/1.6 var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.dir-facts dd{margin:0}
+.dir-loc{margin:0 0 10px}
+.dir-loc:last-child{margin:0}
+.dir-tags{display:flex;flex-wrap:wrap;gap:6px}
+.dir-tags span{font-size:13px;padding:3px 9px;border:1px solid var(--rule);border-radius:20px;background:var(--surface)}
+.dir-claim{border:1px solid var(--rule);border-top:3px solid var(--saffron);padding:18px 20px;margin:28px 0;background:var(--surface)}
+.dir-claim h2{margin-top:0!important}
+.dir-claim .btn{margin:4px 8px 4px 0}
+.dir-claim a.btn:not(.ghost){color:#fff}
+.dir-claim a.btn.ghost{color:var(--ink)}
+@media (max-width:700px){.dir-tools{grid-template-columns:1fr 1fr}.dir-tools .dir-q{grid-column:1/-1}.dir-facts{grid-template-columns:1fr;gap:2px}.dir-facts dd{margin-bottom:12px}}
 
 /* ---------- free-subscribe nudge (public site only) ---------- */
 .nudge{position:fixed;right:20px;bottom:20px;z-index:60;width:360px;max-width:calc(100vw - 32px);background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-top:3px solid var(--saffron);border-radius:4px;box-shadow:0 14px 40px rgba(24,31,28,.18),0 2px 6px rgba(24,31,28,.08);padding:18px 18px 16px;font:400 15px/1.45 var(--sans);transform:translateY(16px);opacity:0;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .35s ease}
@@ -511,7 +545,7 @@ const T = {
     reportErr: 'Spotted an error? Email', newsletter: 'Newsletter', directory: 'Business directory', advertise: 'Advertise', contact: 'Contact',
     about: 'About us', standards: 'Editorial standards', ad: 'Advertisement', photo: 'Photo',
     nlTitle: 'The Melbourne Indian, in your inbox', nlText: 'A short weekly briefing on what matters to Melbourne\'s Indian communities, in English, Hindi or Punjabi.',
-    dirTitle: 'Find local Indian-owned businesses', dirText: 'Local businesses, places of worship and community organisations serving Melbourne\'s Indian communities. Every listing is checked before it appears.',
+    dirTitle: 'Find local Indian-owned businesses', dirText: 'Local businesses, places of worship and community organisations serving Melbourne\'s Indian communities. Every listing is checked against public sources, and businesses can claim, correct or remove theirs.',
     enOnly: 'In English', enOnlyNote: 'These stories are currently available in English.', readEn: 'Read in English', notInLang: '',
     translatedNote: '', empty: 'No stories here yet.', subscribe: 'Subscribe', listBiz: 'List your business',
     houseAdTitle: 'Reach Melbourne\'s Indian communities', houseAdText: 'Founding advertising packages in English, Hindi and Punjabi.', houseAdCta: 'Advertise with us',
@@ -601,6 +635,7 @@ function route() {
   if ((m = h.match(/^(en|hi|pa)-s-([a-z]+)$/))) return { lang: m[1], view: 'section', sec: m[2] };
   if ((m = h.match(/^(en|hi|pa)-a-([a-z0-9-]+)$/))) return { lang: m[1], view: 'article', slug: m[2] };
   if ((m = h.match(/^(en|hi|pa)-p-([a-z]+)$/))) return { lang: m[1], view: 'page', page: m[2] };
+  if ((m = h.match(/^(en|hi|pa)-d-([a-z0-9-]+)$/))) return { lang: m[1], view: 'listing', slug: m[2] };
   if ((m = h.match(/^desk(?:-([a-z]+))?(?:-(.+))?$/))) return { lang: 'en', view: 'desk', dv: m[1] || 'overview', arg: m[2] || '' };
   return { lang: 'en', view: 'home' };
 }
@@ -609,6 +644,7 @@ const href = {
   sec: (l, s) => `#${l}-s-${s}`,
   art: (l, s) => `#${l}-a-${s}`,
   page: (l, p) => `#${l}-p-${p}`,
+  dir: (l, s) => `#${l}-d-${s}`,
   desk: (v, a) => '#desk' + (v ? '-' + v : '') + (a ? '-' + a : '')
 };
 
@@ -939,6 +975,72 @@ async function submitForm(form) {
   const mail = `mailto:${f.to}?subject=${encodeURIComponent(f.subject)}&body=${encodeURIComponent(body)}`;
   out.innerHTML = `<div class="status err" style="color:var(--ink)"><p style="margin:0 0 8px">We couldn't send that from the website just now. Tap below to send it from your email instead, with your details already filled in.</p><p style="margin:0 0 8px"><a class="btn sm" href="${mail}">Send by email</a></p><pre class="copytxt" style="white-space:pre-wrap;font:14px/1.4 var(--sans);margin:0 0 8px">${esc(body)}</pre><div class="copybox"><code>${f.to}</code><button type="button" class="btn sm ghost" data-act="copy-form">Copy details</button></div></div>`;
 }
+/* ================= business directory ================= */
+const DIR_CATS = ['Restaurants & takeaway', 'Sweets & bakeries', 'Groceries', 'Fashion & bridal', 'Weddings & photography', 'Health', 'Migration & education', 'Accounting & finance', 'Real estate', 'Driving schools', 'Travel', 'Temples & gurdwaras', 'Community organisations'];
+const dirSlug = d => d.slug || d._id || String(d.business || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const dirAll = () => (site.directory || []).filter(d => d.status === 'approved');
+const dirSubs = d => (d.suburbs && d.suburbs.length ? d.suburbs : String(d.suburb || '').split(/,\s*/)).filter(Boolean);
+const dirWide = d => /melbourne-wide|australia-wide|victoria-wide|online/i.test(d.area || '');
+const telHref = p => 'tel:' + String(p).replace(/[^\d+]/g, '');
+const dirDate = v => { const d = new Date(String(v || '').slice(0, 10) + 'T00:00:00'); return isNaN(d) ? '' : d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }); };
+const dirMail = (d, what) => `mailto:${ADS}?subject=${encodeURIComponent(what + ': ' + d.business)}&body=${encodeURIComponent(`Hi,\n\nI'm writing about the listing for ${d.business} on The Melbourne Indian business directory (${location.origin}/directory/${dirSlug(d)}/).\n\n` + (what === 'Remove listing' ? 'Please remove this listing.\n\nMy name and role at the business:\n' : 'My name and role at the business:\n\nWhat needs changing or adding:\n'))}`;
+function dirSort(a, b) { return (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || DIR_CATS.indexOf(a.category) - DIR_CATS.indexOf(b.category) || String(a.business).localeCompare(String(b.business)); }
+function dirCard(d, l) {
+  const subs = dirSubs(d), where = subs.slice(0, 3).join(' · ') + (subs.length > 3 ? ` · +${subs.length - 3} more` : '') + (dirWide(d) ? ` · ${d.area}` : '');
+  const hay = [d.business, d.category, d.description, subs.join(' '), (d.tags || []).join(' '), d.languages, d.area].join(' ').toLowerCase();
+  return `<article class="dir-card${d.featured ? ' is-featured' : ''}" data-cat="${esc(d.category || '')}" data-sub="|${esc(subs.join('|'))}|" data-wide="${dirWide(d) ? 1 : 0}" data-q="${esc(hay)}"><span class="kicker">${esc(d.category || '')}${d.featured ? ' · Featured' : ''}</span><h3><a href="${href.dir(l, dirSlug(d))}">${esc(d.business)}</a></h3><p class="dir-where">${esc(where)}</p><p class="dir-desc">${esc(d.description || '')}</p><p class="dir-act">${d.phone ? `<a href="${telHref(d.phone)}">${esc(d.phone)}</a>` : ''}${d.website ? `<a href="${esc(d.website)}" target="_blank" rel="noopener">Website</a>` : ''}<a href="${href.dir(l, dirSlug(d))}">${(d.locations || []).length > 1 ? `${d.locations.length} locations` : 'Details'}</a></p>${d.claimed ? '' : `<p class="dir-src">Listed from public information · <a href="${href.dir(l, dirSlug(d))}">Is this your business?</a></p>`}</article>`;
+}
+function dirFilter() {
+  const root = document.querySelector('.dir-page'); if (!root) return;
+  const f = S.ui.dir || (S.ui.dir = { q: '', cat: '', sub: '' });
+  const words = f.q.toLowerCase().split(/\s+/).filter(Boolean); let n = 0;
+  root.querySelectorAll('.dir-card').forEach(c => {
+    const ok = (!f.cat || c.dataset.cat === f.cat) && (!f.sub || c.dataset.sub.includes('|' + f.sub + '|') || c.dataset.wide === '1') && words.every(w => c.dataset.q.includes(w));
+    c.hidden = !ok; if (ok) n++;
+  });
+  const total = root.querySelectorAll('.dir-card').length, cnt = root.querySelector('.dir-count'), none = root.querySelector('.dir-none');
+  if (cnt) cnt.textContent = n === total ? `${total} listings` : `Showing ${n} of ${total} listings`;
+  if (none) none.hidden = n > 0;
+}
+document.addEventListener('input', ev => {
+  const el = ev.target; if (!el.closest || !el.closest('.dir-tools')) return;
+  const f = S.ui.dir || (S.ui.dir = { q: '', cat: '', sub: '' });
+  f[el.name] = el.value; dirFilter();
+});
+function viewDirectory(r, sw) {
+  const l = r.lang, t = T[l], list = dirAll().sort(dirSort), f = S.ui.dir || (S.ui.dir = { q: '', cat: '', sub: '' });
+  const cats = DIR_CATS.filter(c => list.some(d => d.category === c)).concat([...new Set(list.map(d => d.category))].filter(c => c && !DIR_CATS.includes(c)));
+  const subCount = {}; list.forEach(d => dirSubs(d).forEach(x => { subCount[x] = (subCount[x] || 0) + 1; }));
+  const subs = Object.keys(subCount).filter(x => !/^melbourne$/i.test(x)).sort((a, b) => a.localeCompare(b));
+  const opt = (v, label, cur) => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(label)}</option>`;
+  const main = `<div class="wrap dir-page"><header class="dir-head"><h1>${esc(t.directory)}</h1><p class="dek">${esc(t.dirText)}</p></header>
+${list.length ? `<div class="dir-tools" role="search"><div class="dir-q"><label for="dir-q">Search</label><input id="dir-q" name="q" type="search" placeholder="Biryani, gurdwara, tax return, Tarneit…" value="${esc(f.q)}" autocomplete="off"></div><div><label for="dir-cat">Category</label><select id="dir-cat" name="cat">${opt('', 'All categories', f.cat)}${cats.map(c => opt(c, `${c} (${list.filter(d => d.category === c).length})`, f.cat)).join('')}</select></div><div><label for="dir-sub">Suburb</label><select id="dir-sub" name="sub">${opt('', 'All suburbs', f.sub)}${subs.map(x => opt(x, x, f.sub)).join('')}</select></div></div><p class="dir-count" aria-live="polite">${list.length} listings</p><div class="dir-grid">${list.map(d => dirCard(d, l)).join('')}</div><p class="dir-none" hidden>Nothing matches yet. Try a different word or suburb, or <a href="mailto:${ADS}?subject=Directory%20suggestion">tell us which business we should add</a>.</p>` : `<p class="empty">The first listings are being checked and will appear here soon.</p>`}
+<section class="prose dir-more"><h2>${esc(t.listBiz)}</h2><p>Basic listings are free. A <strong>featured listing</strong> ($49 a month) puts your business first in its category, with a photo and a description in up to three languages. See our <a href="${href.page(l, 'advertise')}">advertising packages</a>.</p><p class="small muted">Many listings are made from public information, such as a business's own website. If one is yours, you can claim it, correct it or ask us to remove it by emailing <a href="mailto:${ADS}">${ADS}</a>. We remove listings the same day we're asked.</p>${formHtml('listing')}</section></div>`;
+  return chrome(r, main, { switch: sw });
+}
+function viewListing(r) {
+  const l = r.lang, all = dirAll(), d = all.find(x => dirSlug(x) === r.slug);
+  const sw = { en: href.dir('en', r.slug), hi: href.dir('hi', r.slug), pa: href.dir('pa', r.slug) };
+  if (!d) { document.title = 'Listing not found · The Melbourne Indian'; return chrome(r, `<div class="wrap page-grid"><article class="prose"><p class="dir-back"><a href="${href.page(l, 'directory')}">← Business directory</a></p><h1>Listing not found</h1><p>This listing may have been removed or renamed.</p></article></div>`, { switch: sw }); }
+  document.title = `${d.business}, ${dirSubs(d)[0] || 'Melbourne'} · Business directory · The Melbourne Indian`;
+  const locs = d.locations || [], rows = [];
+  if (locs.length) rows.push([locs.length > 1 ? 'Locations' : 'Location', locs.map(x => `<div class="dir-loc"><strong>${esc(x.label ? x.label + ', ' + x.suburb : x.suburb)}</strong>${x.address ? '<br>' + esc(x.address) : ''}${x.phone ? `<br><a href="${telHref(x.phone)}">${esc(x.phone)}</a>` : ''}</div>`).join('')]);
+  else if (dirSubs(d).length) rows.push(['Suburb', esc(dirSubs(d).join(', '))]);
+  if (d.phone && !locs.some(x => x.phone === d.phone)) rows.push(['Phone', `<a href="${telHref(d.phone)}">${esc(d.phone)}</a>`]);
+  if (d.website) rows.push(['Website', `<a href="${esc(d.website)}" target="_blank" rel="noopener">${esc(d.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''))}</a>`]);
+  if (d.hours) rows.push(['Hours', esc(d.hours)]);
+  if (d.area) rows.push(['Serves', esc(d.area)]);
+  if (d.languages) rows.push(['Languages', esc(d.languages)]);
+  if ((d.tags || []).length) rows.push(['Good to know', `<div class="dir-tags">${d.tags.map(x => `<span>${esc(x)}</span>`).join('')}</div>`]);
+  if (d.note) rows.push(['Note', esc(d.note)]);
+  const more = all.filter(x => x !== d && x.category === d.category).sort((a, b) => (dirSubs(b).some(s => dirSubs(d).includes(s)) ? 1 : 0) - (dirSubs(a).some(s => dirSubs(d).includes(s)) ? 1 : 0) || dirSort(a, b)).slice(0, 6);
+  const src = d.source ? `<a href="${esc(d.source)}" target="_blank" rel="noopener">${esc(d.sourceLabel || 'source')}</a>` : esc(d.sourceLabel || 'public sources');
+  const main = `<p class="dir-back"><a href="${href.page(l, 'directory')}">← Business directory</a></p><span class="kicker">${esc(d.category || '')}${d.featured ? ' · Featured' : ''}</span><h1>${esc(d.business)}</h1><p class="dek">${esc(d.description || '')}</p><dl class="dir-facts">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+<p class="small muted">${d.claimed ? 'Details supplied by the business.' : `Listed from public information (${src})${d.checked ? ', checked ' + esc(dirDate(d.checked)) : ''}.`} Details can change, so check with the business before you visit.</p>
+${d.claimed ? '' : `<section class="dir-claim"><h2>Is this your business?</h2><p>We made this free listing from public information. Claim it to correct the details or add photos and a description in Hindi and Punjabi. Or ask us to take it down: we remove listings the same day we're asked.</p><p><a class="btn" href="${esc(dirMail(d, 'Claim listing'))}">Claim or update this listing</a><a class="btn ghost" href="${esc(dirMail(d, 'Remove listing'))}">Remove this listing</a></p></section>`}`;
+  const side = (more.length ? `<div class="rail-box"><h2>More ${esc(d.category || 'listings')}</h2><ul class="dir-side">${more.map(x => `<li><a href="${href.dir(l, dirSlug(x))}">${esc(x.business)}</a> <span class="small muted">${esc(dirSubs(x)[0] || '')}</span></li>`).join('')}</ul></div>` : '') + adSlot('mrec', l, 5);
+  return chrome(r, `<div class="wrap page-grid"><article class="prose">${main}</article><aside class="rail">${side}</aside></div>`, { switch: sw });
+}
 function viewPage(r) {
   const l = r.lang, t = T[l], p = r.page;
   const sw = { en: href.page('en', p), hi: href.page('hi', p), pa: href.page('pa', p) };
@@ -948,10 +1050,8 @@ function viewPage(r) {
   else if (p === 'advertise') { main = `<h1>Advertise with us</h1>${pages.advertise || ''}<h2>Send an enquiry</h2>${formHtml('enquiry')}`; side = `<div class="rail-box"><h2>Advertising</h2><p class="small">Email <a href="mailto:${ADS}">${ADS}</a></p></div>`; }
   else if (p === 'newsletter') main = `<h1>${esc(t.newsletter)}</h1><p class="dek">${esc(t.nlText)}</p>${formHtml('subscribe')}<p class="small muted" style="margin-top:12px">We use your email only to send the newsletter you chose. Every email has an unsubscribe link.</p>`;
   else if (p === 'contact') main = `<h1>${esc(t.contact)}</h1><p class="dek">News tips, corrections and feedback go to our editors.</p><div class="copybox" style="margin-bottom:8px"><span>News and corrections:</span><code>${NEWS}</code></div><div class="copybox" style="margin-bottom:22px"><span>Advertising:</span><code>${ADS}</code></div><h2>Send us a tip</h2>${formHtml('tip')}`;
-  else if (p === 'directory') {
-    const list = (site.directory || []).filter(d => d.status === 'approved').sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || String(a.category || '').localeCompare(String(b.category || '')) || String(a.business || '').localeCompare(String(b.business || '')));
-    main = `<h1>${esc(t.directory)}</h1><p class="dek">${esc(t.dirText)}</p>${list.length ? `<div class="dir-grid">${list.map(d => `<article class="dir-card${d.featured ? ' is-featured' : ''}"><span class="kicker">${esc(d.category || '')}${d.featured ? ' · Featured' : ''}</span><h3>${esc(d.business)}</h3><p class="small muted">${esc(d.suburb || '')}${d.languages ? ' · ' + esc(d.languages) : ''}</p><p class="small">${esc(d.description || '')}</p>${d.website ? `<a class="small" href="${esc(d.website)}" target="_blank" rel="noopener">Website</a>` : ''}</article>`).join('')}</div>` : `<p class="empty">The first listings are being checked and will appear here soon.</p>`}<h2>${esc(t.listBiz)}</h2><p>Basic listings are free. A <strong>featured listing</strong> ($49 a month) puts your business first in its category, with a photo and a description in up to three languages. See our <a href="${href.page(l, 'advertise')}">advertising packages</a>.</p><p class="small muted">Places of worship and community organisations are listed free, using their public information. If one of these is yours and something needs changing, email <a href="mailto:${ADS}">${ADS}</a>.</p>${formHtml('listing')}`;
-  } else if (pages[p]) main = `<h1>${esc(({ privacy: 'Privacy policy' })[p] || p)}</h1>${pages[p]}`;
+  else if (p === 'directory') return viewDirectory(r, sw);
+  else if (pages[p]) main = `<h1>${esc(({ privacy: 'Privacy policy' })[p] || p)}</h1>${pages[p]}`;
   else main = `<h1>Page not found</h1>`;
   return chrome(r, `<div class="wrap page-grid"><article class="prose">${main}</article><aside class="rail">${side}</aside></div>`, { switch: sw });
 }
@@ -1338,9 +1438,10 @@ function render(soft) {
   else if (r.view === 'article') html = viewArticle(r);
   else if (r.view === 'section') html = viewSection(r);
   else if (r.view === 'page') html = viewPage(r);
+  else if (r.view === 'listing') html = viewListing(r);
   else html = viewHome(r);
   if (html === '') return;
-  if (r.view !== 'article') document.title = r.view === 'desk' ? 'Newsroom desk · The Melbourne Indian' : 'The Melbourne Indian';
+  if (r.view !== 'article' && r.view !== 'listing') document.title = r.view === 'desk' ? 'Newsroom desk · The Melbourne Indian' : 'The Melbourne Indian';
   document.documentElement.lang = r.lang;
   const y = window.scrollY;
   app.innerHTML = html;
@@ -1348,6 +1449,7 @@ function render(soft) {
   lastKey = key;
   initHero();
   initTicker();
+  dirFilter();
   if (typeof statsPage === 'function') statsPage();
 }
 /* ================= share: copy link ================= */
