@@ -9,7 +9,7 @@ Output: index.html, <lang>/<slug>/index.html (one page per story, with link-prev
         manifest.webmanifest, sw.js, icons/ (installable app; see tools/pwa.py)
 Run from the repo root:  python3 tools/build_public.py
 """
-import datetime as dt, html, json, os, re, shutil
+import datetime as dt, html, json, os, re, shutil, subprocess
 from email.utils import format_datetime
 from PIL import Image, ImageDraw, ImageFont
 import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))); import pwa
@@ -126,6 +126,7 @@ def main():
     org_ld = '<script type="application/ld+json">' + json.dumps(org, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
     open(P("index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(NAME, TAG, SITE + "/", SITE + "/og/site.jpg", extra=org_ld)))
     urls = [(SITE + "/", site.get("builtAt", "")[:10])]
+    routes = [["index.html", "en"]]  # static file -> app route, for prerendering
     for key, (title, path) in PAGES.items():  # crawlable copies of the About / Standards / Advertise pages
         body = (site.get("pages") or {}).get(key) or (DIR_DESC if key == "directory" else None)
         if not body: continue
@@ -133,7 +134,7 @@ def main():
         extra = f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#en-p-{key}')</script>"
         os.makedirs(P(path), exist_ok=True)
         open(P(path, "index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(f"{title} · {NAME}", desc, f"{SITE}/{path}/", SITE + "/og/site.jpg", extra=extra)))
-        urls.append((f"{SITE}/{path}/", site.get("builtAt", "")[:10]))
+        urls.append((f"{SITE}/{path}/", site.get("builtAt", "")[:10])); routes.append([f"{path}/index.html", f"en-p-{key}"])
     # one crawlable page per directory listing, with LocalBusiness structured data
     LDT = {"Restaurants & takeaway": "Restaurant", "Sweets & bakeries": "Bakery", "Groceries": "GroceryStore", "Fashion & bridal": "ClothingStore",
            "Health": "MedicalClinic", "Migration & education": "ProfessionalService", "Accounting & finance": "AccountingService", "Real estate": "RealEstateAgent",
@@ -159,7 +160,7 @@ def main():
                  + f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#en-d-{sl}')</script>")
         os.makedirs(P("directory", sl), exist_ok=True)
         open(P("directory", sl, "index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(f"{d['business']}, {subs[0] if subs else 'Melbourne'} · Business directory · {NAME}", desc, url, SITE + "/og/site.jpg", extra=extra)))
-        urls.append((url, (d.get("updated") or "")[:10]))
+        urls.append((url, (d.get("updated") or "")[:10])); routes.append([f"directory/{sl}/index.html", f"en-d-{sl}"])
     if os.path.isdir(P("directory")):
         for x in os.listdir(P("directory")):
             if os.path.isdir(P("directory", x)) and x not in dkeep: shutil.rmtree(P("directory", x))
@@ -180,7 +181,7 @@ def main():
             head = head_tags(f"{v['headline']} · {NAME}", v.get("dek", ""), url, img, "article", l, extra)
             os.makedirs(P(l, a["slug"]), exist_ok=True)
             open(P(l, a["slug"], "index.html"), "w", encoding="utf-8").write(page(tpl, site, head))
-            urls.append((url, (a.get("updated") or a.get("date") or "")[:10]))
+            urls.append((url, (a.get("updated") or a.get("date") or "")[:10])); routes.append([f"{l}/{a['slug']}/index.html", f"{l}-a-{a['slug']}"])
     for l in ("en", "hi", "pa"):  # remove pages for stories no longer published
         if os.path.isdir(P(l)):
             for d in os.listdir(P(l)):
@@ -211,6 +212,12 @@ def main():
         u = f"{SITE}/en/{a['slug']}/"
         rss.append(f"<item><title>{esc(a['en']['headline'])}</title><link>{u}</link><guid>{u}</guid><description>{esc(a['en'].get('dek',''))}</description><pubDate>{rfc(a.get('date',''))}</pubDate></item>")
     open(P("feed.xml"), "w", encoding="utf-8").write("\n".join(rss + ["</channel></rss>"]) + "\n")
+    # put the rendered page into each static file so Google sees the text without running JavaScript
+    rf = P("tools", ".routes.json"); json.dump(routes, open(rf, "w"))
+    try: subprocess.run(["node", P("tools", "prerender.js"), rf], check=True, timeout=900)
+    except Exception as e: print("WARNING: prerender failed, pages will rely on JavaScript:", e)
+    finally:
+        if os.path.exists(rf): os.remove(rf)
     pwa.write(P, NAME, TAG, open(P("index.html"), encoding="utf-8").read())
     print(f"built: {len(site['articles'])} stories, {len(urls)-1} story pages, app manifest + service worker")
 
