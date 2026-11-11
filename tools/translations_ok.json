@@ -1,4 +1,27 @@
 {
-  "_note": "Language editions cleared for the public site. A Hindi/Punjabi version is published only if listed here or marked 'reviewed' (by a fluent editor) in the desk.",
-  "allowed": ["diwali-2026-melbourne/hi", "diwali-2026-melbourne/pa", "multicultural-grants-2026/hi", "multicultural-grants-2026/pa", "victorian-election-2026-key-dates/hi", "victorian-election-2026-key-dates/pa", "welcome/hi", "welcome/pa"]
+ "_note": "Language editions cleared for the public site. A Hindi/Punjabi version is published if listed here or marked reviewed in the desk. Publisher's call (11 Nov 2026): Claude-checked translations go live; Claude checks numbers, dates, names and that the translation matches the current English version.",
+ "allowed": [
+  "diwali-2026-melbourne/hi",
+  "diwali-2026-melbourne/pa",
+  "multicultural-grants-2026/hi",
+  "multicultural-grants-2026/pa",
+  "victorian-election-2026-key-dates/hi",
+  "victorian-election-2026-key-dates/pa",
+  "welcome/hi",
+  "welcome/pa",
+  "australia-visa-biometrics-india-2026/hi",
+  "australia-visa-biometrics-india-2026/pa",
+  "vec-voting-help-indian-languages/hi",
+  "vec-voting-help-indian-languages/pa",
+  "indian-consular-services-melbourne/hi",
+  "indian-consular-services-melbourne/pa",
+  "training-visa-407-offshore-only-12-november/hi",
+  "training-visa-407-offshore-only-12-november/pa",
+  "tarneit-temple-power-cuts-police-investigating/hi",
+  "tarneit-temple-power-cuts-police-investigating/pa",
+  "india-largest-overseas-born-group/hi",
+  "india-largest-overseas-born-group/pa",
+  "victoria-skilled-visa-190-nomination-2026-27-open/hi",
+  "victoria-skilled-visa-190-nomination-2026-27-open/pa"
+ ]
 }
