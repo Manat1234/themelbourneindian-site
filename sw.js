@@ -1,7 +1,7 @@
 /* The Melbourne Indian service worker.
    News must be fresh: pages and data/site.json always try the network first and only fall back
    to the saved copy when offline. Photos are kept for offline reading (newest 80). */
-const V = 'tmi-40dd859175', IMG = 'tmi-img';
+const V = 'tmi-a540bada96', IMG = 'tmi-img';
 const CORE = ['/', '/data/site.json', '/manifest.webmanifest', '/favicon.png', '/icons/icon-192.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(V).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== V && k !== IMG).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -30,5 +30,6 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') { e.respondWith(networkFirst(req, u.pathname)); return; }
   if (u.pathname === '/data/site.json') { e.respondWith(networkFirst(req, '/data/site.json')); return; }
   if (/^\/(img|og|icons)\//.test(u.pathname)) { e.respondWith(imageFirst(req)); return; }
+  if (/^\/app\.[0-9a-f]+\.js$/.test(u.pathname)) { e.respondWith(caches.open(V).then(c => c.match(req).then(hit => hit || fetch(req).then(res => { if (res.ok) c.put(req, res.clone()); return res; })))); return; }
   e.respondWith(caches.match(req).then(hit => hit || fetch(req)));
 });

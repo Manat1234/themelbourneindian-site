@@ -113,6 +113,31 @@ PUBLISHER = {"@type": "NewsMediaOrganization", "name": NAME, "url": SITE + "/",
 PAGES = {"about": ("About us", "about"), "standards": ("Editorial standards", "standards"), "advertise": ("Advertise with us", "advertise"), "privacy": ("Privacy policy", "privacy"), "directory": ("Business directory", "directory")}
 DIR_DESC = "Local businesses, places of worship and community organisations serving Melbourne's Indian communities."
 
+def nwords(a):
+    n = 0
+    for b in (a.get("en") or {}).get("body") or []:
+        if isinstance(b, str): n += len(b.split())
+        elif b.get("ul"): n += len(" ".join(b["ul"]).split())
+        elif b.get("dl"): n += len(" ".join(x for row in b["dl"] for x in row).split())
+        elif b.get("note"): n += len(b["note"].split())
+    return n
+
+def light(site, slug=None, directory=False):
+    """Page snapshot without story bodies (except this page's story) or the directory, to keep pages small.
+    The app loads the full data/site.json in the background."""
+    out = {k: v for k, v in site.items() if k not in ("articles", "directory")}
+    out["partial"] = True
+    arts = []
+    for a in site["articles"]:
+        if a["slug"] == slug: arts.append(a); continue
+        x = {k: v for k, v in a.items() if k not in ("sources", "risk_note", "desk_note", "corrections")}
+        for l in ("en", "hi", "pa"):
+            if isinstance(x.get(l), dict): x[l] = {k: v for k, v in x[l].items() if k != "body"}
+        x["mins"] = max(1, -(-nwords(a) // 200)); arts.append(x)
+    out["articles"] = arts
+    out["directory"] = site.get("directory") or [] if directory else []
+    return out
+
 def V(a, l): return a.get(l) if (a.get(l) or {}).get("headline") else None
 
 def main():
@@ -122,9 +147,16 @@ def main():
     json.dump(site, open(P("data", "site.json"), "w", encoding="utf-8"), ensure_ascii=False, sort_keys=True)
     tpl = clean_template(open(P("tools", "app-page.html"), encoding="utf-8").read())
     assert 'noindex' not in tpl
+    # the app code goes in one shared, cached file (app.<hash>.js) instead of being repeated in every page
+    m = re.search(r'<script id="appjs">(.*?)</script>', tpl, re.S)
+    js = m.group(1); fn = "app." + __import__("hashlib").sha1(js.encode("utf-8")).hexdigest()[:10] + ".js"
+    for old in os.listdir(ROOT):
+        if re.fullmatch(r"app\.[0-9a-f]{10}\.js", old) and old != fn: os.remove(P(old))
+    open(P(fn), "w", encoding="utf-8").write(js)
+    tpl = tpl[:m.start()] + f'<script id="appjs" src="/{fn}"></script>' + tpl[m.end():]
     org = dict(PUBLISHER, **{"@context": "https://schema.org", "description": TAG, "email": "news@themelbourneindian.com.au", "areaServed": "Melbourne, Victoria, Australia", "inLanguage": ["en", "hi", "pa"]})
     org_ld = '<script type="application/ld+json">' + json.dumps(org, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
-    open(P("index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(NAME, TAG, SITE + "/", SITE + "/og/site.jpg", extra=org_ld)))
+    open(P("index.html"), "w", encoding="utf-8").write(page(tpl, light(site), head_tags(NAME, TAG, SITE + "/", SITE + "/og/site.jpg", extra=org_ld)))
     urls = [(SITE + "/", site.get("builtAt", "")[:10])]
     routes = [["index.html", "en"]]  # static file -> app route, for prerendering
     for key, (title, path) in PAGES.items():  # crawlable copies of the About / Standards / Advertise pages
@@ -133,7 +165,7 @@ def main():
         m = re.search(r'<p class="dek">(.*?)</p>', body, re.S); desc = re.sub(r"<[^>]+>", "", m.group(1)).strip() if m else (DIR_DESC if key == "directory" else TAG)
         extra = f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#en-p-{key}')</script>"
         os.makedirs(P(path), exist_ok=True)
-        open(P(path, "index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(f"{title} · {NAME}", desc, f"{SITE}/{path}/", SITE + "/og/site.jpg", extra=extra)))
+        open(P(path, "index.html"), "w", encoding="utf-8").write(page(tpl, light(site, directory=(key == "directory")), head_tags(f"{title} · {NAME}", desc, f"{SITE}/{path}/", SITE + "/og/site.jpg", extra=extra)))
         urls.append((f"{SITE}/{path}/", site.get("builtAt", "")[:10])); routes.append([f"{path}/index.html", f"en-p-{key}"])
     # one crawlable page per directory listing, with LocalBusiness structured data
     LDT = {"Restaurants & takeaway": "Restaurant", "Sweets & bakeries": "Bakery", "Groceries": "GroceryStore", "Fashion & bridal": "ClothingStore",
@@ -159,7 +191,7 @@ def main():
         extra = ('<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
                  + f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#en-d-{sl}')</script>")
         os.makedirs(P("directory", sl), exist_ok=True)
-        open(P("directory", sl, "index.html"), "w", encoding="utf-8").write(page(tpl, site, head_tags(f"{d['business']}, {subs[0] if subs else 'Melbourne'} · Business directory · {NAME}", desc, url, SITE + "/og/site.jpg", extra=extra)))
+        open(P("directory", sl, "index.html"), "w", encoding="utf-8").write(page(tpl, light(site, directory=True), head_tags(f"{d['business']}, {subs[0] if subs else 'Melbourne'} · Business directory · {NAME}", desc, url, SITE + "/og/site.jpg", extra=extra)))
         urls.append((url, (d.get("updated") or "")[:10])); routes.append([f"directory/{sl}/index.html", f"en-d-{sl}"])
     if os.path.isdir(P("directory")):
         for x in os.listdir(P("directory")):
@@ -180,7 +212,7 @@ def main():
                      + f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#{l}-a-{a['slug']}')</script>")
             head = head_tags(f"{v['headline']} · {NAME}", v.get("dek", ""), url, img, "article", l, extra)
             os.makedirs(P(l, a["slug"]), exist_ok=True)
-            open(P(l, a["slug"], "index.html"), "w", encoding="utf-8").write(page(tpl, site, head))
+            open(P(l, a["slug"], "index.html"), "w", encoding="utf-8").write(page(tpl, light(site, slug=a["slug"]), head))
             urls.append((url, (a.get("updated") or a.get("date") or "")[:10])); routes.append([f"{l}/{a['slug']}/index.html", f"{l}-a-{a['slug']}"])
     for l in ("en", "hi", "pa"):  # remove pages for stories no longer published
         if os.path.isdir(P(l)):

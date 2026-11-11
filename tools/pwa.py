@@ -76,6 +76,7 @@ self.addEventListener('fetch', e => {
   if (req.mode === 'navigate') { e.respondWith(networkFirst(req, u.pathname)); return; }
   if (u.pathname === '/data/site.json') { e.respondWith(networkFirst(req, '/data/site.json')); return; }
   if (/^\/(img|og|icons)\//.test(u.pathname)) { e.respondWith(imageFirst(req)); return; }
+  if (/^\/app\.[0-9a-f]+\.js$/.test(u.pathname)) { e.respondWith(caches.open(V).then(c => c.match(req).then(hit => hit || fetch(req).then(res => { if (res.ok) c.put(req, res.clone()); return res; })))); return; }
   e.respondWith(caches.match(req).then(hit => hit || fetch(req)));
 });
 """

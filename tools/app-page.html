@@ -497,6 +497,29 @@ textarea{min-height:110px;resize:vertical}
 .dir-claim a.btn.ghost{color:var(--ink)}
 @media (max-width:700px){.dir-tools{grid-template-columns:1fr 1fr}.dir-tools .dir-q{grid-column:1/-1}.dir-facts{grid-template-columns:1fr;gap:2px}.dir-facts dd{margin-bottom:12px}}
 
+/* ---------- read next, search ---------- */
+.readnext{border-top:3px solid var(--ink);margin:34px 0 8px;padding-top:12px}
+.readnext h2{font:800 13px/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;margin:0 0 16px}
+[lang="hi"] .readnext h2,[lang="pa"] .readnext h2{letter-spacing:.02em;font-size:16px}
+.readnext-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.readnext .second h3{font-size:19px}
+.readnext .second+.second{border-left:1px solid var(--rule);padding-left:22px}
+.nav-search{display:inline-flex;align-items:center;gap:6px}
+.util-search{display:inline-flex;align-items:center;gap:5px}
+@media (min-width:761px){.util-search{display:none}}
+.search-page{padding-block:28px 60px;max-width:860px}
+.search-page h1{font-size:clamp(32px,4.4vw,50px);margin-bottom:14px}
+.search-form input{width:100%;font:400 20px/1.2 var(--sans);padding:14px 16px;border:2px solid var(--ink);border-radius:2px;background:var(--surface);color:var(--ink)}
+.search-form input:focus{outline:3px solid var(--focus);outline-offset:2px}
+#search-out{margin-top:16px}
+.search-h{font:800 13px/1.2 var(--sans);letter-spacing:.12em;text-transform:uppercase;border-top:3px solid var(--ink);padding-top:10px;margin:26px 0 6px}
+.search-list{list-style:none;margin:0;padding:0}
+.search-list li{padding:16px 0;border-bottom:1px solid var(--rule)}
+.search-list h3{font-size:22px;line-height:1.2;margin:2px 0 6px}
+.search-list .dek{font-size:15.5px;color:var(--ink2);margin:0 0 4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (max-width:760px){.readnext-grid{grid-template-columns:1fr;gap:0}.readnext .second{padding:14px 0;border-top:1px solid var(--rule)}.readnext .second+.second{border-left:0;padding-left:0}.readnext .second .r32{display:none}}
+
 /* ---------- free-subscribe nudge (public site only) ---------- */
 .nudge{position:fixed;right:20px;bottom:20px;z-index:60;width:360px;max-width:calc(100vw - 32px);background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-top:3px solid var(--saffron);border-radius:4px;box-shadow:0 14px 40px rgba(24,31,28,.18),0 2px 6px rgba(24,31,28,.08);padding:18px 18px 16px;font:400 15px/1.45 var(--sans);transform:translateY(16px);opacity:0;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .35s ease}
 .nudge.is-on{transform:none;opacity:1}
@@ -612,7 +635,7 @@ const nowIso = () => new Date().toISOString();
 const slugify = s => String(s).toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 70) || ('story-' + Date.now());
 const okEmail = s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(s).trim());
 const words = a => { let n = 0; for (const b of (a.en?.body || [])) { if (typeof b === 'string') n += b.split(/\s+/).length; else if (b.ul) n += b.ul.join(' ').split(/\s+/).length; else if (b.dl) n += b.dl.flat().join(' ').split(/\s+/).length; else if (b.note) n += b.note.split(/\s+/).length; } return n; };
-const mins = a => Math.max(1, Math.ceil(words(a) / 200));
+const mins = a => (a.en?.body ? Math.max(1, Math.ceil(words(a) / 200)) : a.mins || 1);
 function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3200); }
 async function copyText(text, el) {
   try { await navigator.clipboard.writeText(text); toast('Copied'); }
@@ -772,12 +795,12 @@ function chrome(r, inner, opts = {}) {
   const draftbar = previewMode() ? `<div class="draftbar"><div class="wrap"><span class="badge b-draft">Preview</span> You are seeing drafts and held stories as editors see them. The public site shows approved stories only. <a href="${href.desk('stories')}">Back to the desk</a> <button class="btn sm ghost" data-act="exit-preview">Exit preview</button></div></div>` : '';
   return `${draftbar}
 <div class="util"><div class="wrap util-in"><div class="util-l"><strong>${esc(t.edition)}</strong><span>${esc(longDate(today(), l))}</span><span>${esc(t.free)}</span></div>
-<div class="util-r"><a class="util-sub" href="${href.page(l, 'newsletter')}">${esc(t.subscribe)}</a><a href="${href.page(l, 'directory')}">${esc(t.directory)}</a><a href="${href.page(l, 'advertise')}">${esc(t.advertise)}</a>${S.isEditor ? `<a class="desk-link" href="${href.desk()}">Newsroom desk</a>` : ''}</div></div></div>
+<div class="util-r"><a class="util-search" href="${href.page(l, 'search')}" aria-label="Search"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg> Search</a><a class="util-sub" href="${href.page(l, 'newsletter')}">${esc(t.subscribe)}</a><a href="${href.page(l, 'directory')}">${esc(t.directory)}</a><a href="${href.page(l, 'advertise')}">${esc(t.advertise)}</a>${S.isEditor ? `<a class="desk-link" href="${href.desk()}">Newsroom desk</a>` : ''}</div></div></div>
 <header class="mast"><div class="wrap mast-in">
 <a class="identity" href="${href.home(l)}" aria-label="The Melbourne Indian home"><span class="brandmark" aria-hidden="true">m.</span><span><span class="brand" lang="en">The Melbourne <em>Indian.</em></span><span class="tagline">${esc(t.tagline)}</span></span></a>
 <nav class="edition-line" aria-label="Edition"><span class="ed-links">${LANGS.map((x, i) => `${i ? '<span class="ed-sep" aria-hidden="true">|</span>' : ''}<a href="${sw[x]}" lang="${x}"${x === l ? ' aria-current="true"' : ''}>${LANG_FULL[x]}</a>`).join('')}</span></nav>
 </div>
-<nav class="nav" aria-label="Sections"><div class="wrap nav-in"><a href="${href.home(l)}"${r.view === 'home' ? ' aria-current="page"' : ''}>${esc(t.home)}</a>${SECTIONS.map(s => `<a ${secVar(s)} href="${href.sec(l, s)}"${opts.activeSec === s ? ' aria-current="page"' : ''}>${esc(t.sec[s])}</a>`).join('')}<span class="spacer"></span><a href="${href.page(l, 'standards')}">${esc(t.standards)}</a></div></nav>
+<nav class="nav" aria-label="Sections"><div class="wrap nav-in"><a href="${href.home(l)}"${r.view === 'home' ? ' aria-current="page"' : ''}>${esc(t.home)}</a>${SECTIONS.map(s => `<a ${secVar(s)} href="${href.sec(l, s)}"${opts.activeSec === s ? ' aria-current="page"' : ''}>${esc(t.sec[s])}</a>`).join('')}<span class="spacer"></span><a class="nav-search" href="${href.page(l, 'search')}"${r.page === 'search' ? ' aria-current="page"' : ''}><svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>Search</a><a href="${href.page(l, 'standards')}">${esc(t.standards)}</a></div></nav>
 </header>
 ${ticker}
 <main id="main">${inner}</main>
@@ -907,7 +930,7 @@ function viewArticle(r) {
 <div class="byline"><span>${esc(t.by)} <strong>${esc(a.byline || 'The Melbourne Indian newsroom')}</strong></span><span class="tnum">${esc(longDate(a.date, l))}</span><span>${mins(a)} ${esc(t.min)}</span>${a.updated && a.updated.slice(0, 10) !== a.date ? `<span class="tnum">Updated ${esc(shortDate(a.updated.slice(0, 10), l))}</span>` : ''}${others ? `<span>${esc(t.otherLangs)}: ${others}</span>` : ''}</div>${share}</header>
 <div class="art-grid"><div class="art-main">${notInLang}${media(a, vl, '', true, true)}
 <div class="body" lang="${vl}">${bodyHtml(v.body, l, true)}</div>
-<div class="endmatter">${vl !== 'en' && t.translatedNote ? `<p class="muted">${esc(t.translatedNote)}</p>` : ''}${share}${srcs}${corr}<section><p class="muted">${esc(t.reportErr)} <a href="mailto:${NEWS}">${NEWS}</a></p></section></div></div>
+${readNext(a, l, more)}<div class="endmatter">${vl !== 'en' && t.translatedNote ? `<p class="muted">${esc(t.translatedNote)}</p>` : ''}${share}${srcs}${corr}<section><p class="muted">${esc(t.reportErr)} <a href="mailto:${NEWS}">${NEWS}</a></p></section></div></div>
 <aside class="rail">${more.length ? `<div class="rail-box"><h2>${esc(t.moreIn)} ${esc(t.sec[a.section])}</h2><ul class="morelist">${more.map(x => `<li><a href="${href.art(l, x.slug)}" lang="${vlang(x, l)}">${esc(V(x, l).headline)}</a></li>`).join('')}</ul></div>` : ''}${a.section === 'sport' ? fixturesBox(l, 5) : ''}${adSlot('mrec', l, 4)}${dates.length ? `<div class="rail-box"><h2>${esc(t.dates)}</h2><ol class="datelist">${dates.map((d, i) => `<li style="--i:${i}"><span class="rd"><span class="rd-n">${pd(d.date).getUTCDate()}</span><span class="rd-m">${esc(MON3[pd(d.date).getUTCMonth()])}</span></span><span class="dl-t"><a href="${d.slug ? href.art(l, d.slug) : '#'}">${esc(d[l] || d.en)}</a>${dueTag(l, d.date)}</span></li>`).join('')}</ol></div>` : ''}</aside></div></div>`;
   document.title = `${v.headline} · The Melbourne Indian`;
   return chrome(r, html, { activeSec: a.section, switch: sw, scores: a.section === 'sport' });
@@ -1041,6 +1064,42 @@ ${d.claimed ? '' : `<section class="dir-claim"><h2>Is this your business?</h2><p
   const side = (more.length ? `<div class="rail-box"><h2>More ${esc(d.category || 'listings')}</h2><ul class="dir-side">${more.map(x => `<li><a href="${href.dir(l, dirSlug(x))}">${esc(x.business)}</a> <span class="small muted">${esc(dirSubs(x)[0] || '')}</span></li>`).join('')}</ul></div>` : '') + adSlot('mrec', l, 5);
   return chrome(r, `<div class="wrap page-grid"><article class="prose">${main}</article><aside class="rail">${side}</aside></div>`, { switch: sw });
 }
+/* ================= read next + search ================= */
+const STOP = new Set('the a an and or of to in on for with at by from as is are was were be been it its this that these those after before over under into about than then but not no new says say said will would can could may might has have had more most up out off who what when where why how which their his her they them we our you your also first last two one three australia australian victoria victorian melbourne indian india'.split(' '));
+const keyWords = a => new Set(((a.en?.headline || '') + ' ' + (a.en?.dek || '')).toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(w => w.length > 2 && !STOP.has(w)));
+function readNext(a, l, exclude) {
+  if (a.status !== 'published') return '';
+  const kw = keyWords(a), skip = new Set([a.slug, ...(exclude || []).map(x => x.slug)]);
+  const scored = allArticles().filter(x => !skip.has(x.slug)).map(x => { let sc = 0; keyWords(x).forEach(w => { if (kw.has(w)) sc += 2; }); if (x.section === a.section) sc += 1; return [sc, x]; });
+  const pick = scored.sort((p, q) => q[0] - p[0] || String(q[1].date).localeCompare(String(p[1].date)) || (q[1].priority || 0) - (p[1].priority || 0)).slice(0, 3).map(p => p[1]);
+  return pick.length ? `<section class="readnext" aria-labelledby="rn-h"><h2 id="rn-h">${esc(({ en: 'Read next', hi: 'आगे पढ़ें', pa: 'ਅੱਗੇ ਪੜ੍ਹੋ' })[l] || 'Read next')}</h2><div class="readnext-grid">${pick.map(x => storyCardSecond(x, l)).join('')}</div></section>` : '';
+}
+const bodyText = v => (v?.body || []).map(b => typeof b === 'string' ? b : b.h || b.note || (b.ul || []).join(' ') || (b.dl || []).flat().join(' ')).join(' ');
+function runSearch() {
+  const out = document.getElementById('search-out'); if (!out) return;
+  const r = route(), l = r.lang, q = (S.ui.q || '').trim().toLowerCase(), words = q.split(/\s+/).filter(Boolean);
+  if (!words.length) { out.innerHTML = `<p class="muted">Search ${allArticles().length} stories and ${dirAll().length} directory listings.</p>`; return; }
+  const hit = (txt) => words.every(w => txt.includes(w));
+  const stories = [];
+  for (const a of allArticles()) {
+    const v = V(a, l), vl = vlang(a, l), title = (LANGS.map(x => a[x]?.headline || '').join(' ')).toLowerCase(), dek = (LANGS.map(x => a[x]?.dek || '').join(' ')).toLowerCase();
+    const all = title + ' ' + dek + ' ' + LANGS.map(x => bodyText(a[x])).join(' ').toLowerCase() + ' ' + (T[l].sec[a.section] || '').toLowerCase();
+    if (!hit(all)) continue;
+    stories.push([(hit(title) ? 10 : 0) + (hit(dek) ? 4 : 0), a, v, vl]);
+  }
+  stories.sort((p, z) => z[0] - p[0] || String(z[1].date).localeCompare(String(p[1].date)));
+  const biz = dirAll().filter(d => hit([d.business, d.category, d.description, dirSubs(d).join(' '), (d.tags || []).join(' ')].join(' ').toLowerCase())).sort(dirSort);
+  const n = stories.length + biz.length;
+  out.innerHTML = `<p class="dir-count" aria-live="polite">${n ? `${n} result${n === 1 ? '' : 's'} for “${esc(S.ui.q.trim())}”` : `Nothing found for “${esc(S.ui.q.trim())}”. Try fewer or different words.`}${site.partial ? ' · searching the full archive…' : ''}</p>`
+    + (stories.length ? `<section><h2 class="search-h">Stories</h2><ol class="search-list">${stories.slice(0, 40).map(([, a, v, vl]) => `<li ${secVar(a.section)}>${kicker(a, l)}<a class="story-link" href="${href.art(l, a.slug)}" lang="${vl}"><h3>${esc(v.headline)}</h3></a><p class="dek" lang="${vl}">${esc(v.dek)}</p>${meta(a, l)}</li>`).join('')}</ol></section>` : '')
+    + (biz.length ? `<section><h2 class="search-h">Business directory</h2><div class="dir-grid">${biz.slice(0, 12).map(d => dirCard(d, l)).join('')}</div></section>` : '');
+}
+document.addEventListener('input', ev => { if (ev.target && ev.target.id === 'site-q') { S.ui.q = ev.target.value; runSearch(); } });
+document.addEventListener('submit', ev => { if (ev.target && ev.target.classList && ev.target.classList.contains('search-form')) { ev.preventDefault(); ev.stopImmediatePropagation(); } }, true);
+function viewSearch(r, sw) {
+  document.title = 'Search · The Melbourne Indian';
+  return chrome(r, `<div class="wrap search-page"><h1>Search</h1><form class="search-form" role="search"><label class="sr-only" for="site-q">Search stories and businesses</label><input id="site-q" type="search" name="q" placeholder="Visa, election, Tarneit, cricket, biryani…" value="${esc(S.ui.q || '')}" autocomplete="off" enterkeyhint="search"></form><div id="search-out"></div></div>`, { switch: sw });
+}
 function viewPage(r) {
   const l = r.lang, t = T[l], p = r.page;
   const sw = { en: href.page('en', p), hi: href.page('hi', p), pa: href.page('pa', p) };
@@ -1050,7 +1109,8 @@ function viewPage(r) {
   else if (p === 'advertise') { main = `<h1>Advertise with us</h1>${pages.advertise || ''}<h2>Send an enquiry</h2>${formHtml('enquiry')}`; side = `<div class="rail-box"><h2>Advertising</h2><p class="small">Email <a href="mailto:${ADS}">${ADS}</a></p></div>`; }
   else if (p === 'newsletter') main = `<h1>${esc(t.newsletter)}</h1><p class="dek">${esc(t.nlText)}</p>${formHtml('subscribe')}<p class="small muted" style="margin-top:12px">We use your email only to send the newsletter you chose. Every email has an unsubscribe link.</p>`;
   else if (p === 'contact') main = `<h1>${esc(t.contact)}</h1><p class="dek">News tips, corrections and feedback go to our editors.</p><div class="copybox" style="margin-bottom:8px"><span>News and corrections:</span><code>${NEWS}</code></div><div class="copybox" style="margin-bottom:22px"><span>Advertising:</span><code>${ADS}</code></div><h2>Send us a tip</h2>${formHtml('tip')}`;
-  else if (p === 'directory') return viewDirectory(r, sw);
+  else if (p === 'directory') return (site.partial && !(site.directory || []).length) ? chrome(r, `<div class="wrap dir-page"><h1>${esc(t.directory)}</h1><p class="muted">Loading listings…</p></div>`, { switch: sw }) : viewDirectory(r, sw);
+  else if (p === 'search') return viewSearch(r, sw);
   else if (pages[p]) main = `<h1>${esc(({ privacy: 'Privacy policy' })[p] || p)}</h1>${pages[p]}`;
   else main = `<h1>Page not found</h1>`;
   return chrome(r, `<div class="wrap page-grid"><article class="prose">${main}</article><aside class="rail">${side}</aside></div>`, { switch: sw });
@@ -1450,6 +1510,8 @@ function render(soft) {
   initHero();
   initTicker();
   dirFilter();
+  runSearch();
+  if (r.view === 'page' && r.page === 'search' && !soft) { const qi = document.getElementById('site-q'); if (qi && matchMedia('(min-width: 700px)').matches) qi.focus(); }
   if (typeof statsPage === 'function') statsPage();
 }
 /* ================= share: copy link ================= */
@@ -1594,7 +1656,7 @@ render();
 nudgeArm();
 
 /* ================= boot: newer data + capabilities ================= */
-fetch('data/site.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.builtAt && (!site.builtAt || d.builtAt > site.builtAt)) { site = { ...d, pages: d.pages || EMBED.pages }; render(true); } }).catch(() => {});
+fetch('data/site.json', { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(d => { if (d && d.builtAt && (EMBED.partial || !site.builtAt || d.builtAt > site.builtAt)) { const ae = document.activeElement, sid = ae && ae.id, pos = ae && ae.selectionStart; site = { ...d, pages: d.pages || EMBED.pages }; render(true); if (sid) { const el = document.getElementById(sid); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (e) {} } } } }).catch(() => {});
 (async () => {
   const c = window.claude; if (!c || !c.use) { S.user = undefined; return; }
   const [user, db] = await Promise.all([c.use('user').catch(() => null), c.use('db').catch(() => null)]);
