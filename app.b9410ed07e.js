@@ -1024,6 +1024,7 @@ function statsUrl(r) {
   if (r.view === 'article') return `/${r.lang}/${r.slug}/`;
   if (r.view === 'section') return `/${r.lang}/section/${r.sec}/`;
   if (r.view === 'page') return `/${r.lang}/${r.page}/`;
+  if (r.view === 'listing') return `/directory/${r.slug}/`;
   return r.lang === 'en' ? '/' : `/${r.lang}/`;
 }
 function statsOff() {
