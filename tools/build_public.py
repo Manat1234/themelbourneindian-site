@@ -168,6 +168,12 @@ def main():
         os.makedirs(P(path), exist_ok=True)
         open(P(path, "index.html"), "w", encoding="utf-8").write(page(tpl, light(site, directory=(key == "directory")), head_tags(f"{title} · {NAME}", desc, f"{SITE}/{path}/", SITE + "/og/site.jpg", extra=extra)))
         urls.append((f"{SITE}/{path}/", site.get("builtAt", "")[:10])); routes.append([f"{path}/index.html", f"en-p-{key}"])
+        if key == "support":  # language copies so ads can link straight to the Hindi / Punjabi page
+            for lg, tt in (("hi", "स्वतंत्र पत्रकारिता का साथ दें"), ("pa", "ਆਜ਼ਾਦ ਪੱਤਰਕਾਰੀ ਦਾ ਸਾਥ ਦਿਓ")):
+                ex = f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#{lg}-p-support')</script>"
+                os.makedirs(P(lg, "support"), exist_ok=True)
+                open(P(lg, "support", "index.html"), "w", encoding="utf-8").write(page(tpl, light(site), head_tags(f"{tt} · {NAME}", desc, f"{SITE}/{lg}/support/", SITE + "/og/site.jpg", extra=ex)))
+                urls.append((f"{SITE}/{lg}/support/", site.get("builtAt", "")[:10])); routes.append([f"{lg}/support/index.html", f"{lg}-p-support"])
     # one crawlable page per directory listing, with LocalBusiness structured data
     LDT = {"Restaurants & takeaway": "Restaurant", "Sweets & bakeries": "Bakery", "Groceries": "GroceryStore", "Fashion & bridal": "ClothingStore",
            "Health": "MedicalClinic", "Migration & education": "ProfessionalService", "Accounting & finance": "AccountingService", "Real estate": "RealEstateAgent",
@@ -218,7 +224,7 @@ def main():
     for l in ("en", "hi", "pa"):  # remove pages for stories no longer published
         if os.path.isdir(P(l)):
             for d in os.listdir(P(l)):
-                if f"{l}/{d}" not in keep: shutil.rmtree(P(l, d))
+                if f"{l}/{d}" not in keep and d != "support": shutil.rmtree(P(l, d))
     sm = ['<?xml version="1.0" encoding="UTF-8"?>', '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">']
     sm += [f"<url><loc>{esc(u)}</loc>" + (f"<lastmod>{m}</lastmod>" if m else "") + "</url>" for u, m in urls]
     open(P("sitemap.xml"), "w", encoding="utf-8").write("\n".join(sm + ["</urlset>"]) + "\n")
