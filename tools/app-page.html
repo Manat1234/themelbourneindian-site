@@ -51,6 +51,15 @@ p{margin:0 0 1em}
 .ed-links a[aria-current]{color:var(--ink);border-color:var(--saffron)}
 .ed-sep{color:var(--saffron);font-weight:700;font-size:20px}
 .util-sub{color:var(--saffron)!important}
+.util-sup{color:var(--ink)!important;font-weight:700}
+.sup-btns{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:22px 0 14px}
+.sup-b{display:flex;flex-direction:column;gap:3px;padding:16px 18px;border:2px solid var(--ink);border-radius:4px;text-decoration:none;color:var(--ink);background:var(--surface)}
+.sup-b b{font:700 17px/1.25 var(--sans)}.sup-b span{font-size:14px;color:var(--muted)}
+.sup-b.sup-m{background:var(--saffron);border-color:var(--saffron);color:#fff}.sup-b.sup-m span{color:#fff;opacity:.92}
+.sup-b:hover{transform:translateY(-1px)}
+.prose a.sup-b.sup-o,.prose a.sup-b.sup-o b{color:var(--ink);text-decoration:none}.prose a.sup-b{text-decoration:none}
+.sup-box{margin:28px 0 8px;padding:18px 20px;border-top:3px solid var(--saffron);background:var(--surface);border-radius:2px}
+.sup-box h2{margin:0 0 6px;font-size:19px}.sup-box p{margin:0 0 12px;color:var(--ink2)}
 [lang="hi"] .tagline,[lang="pa"] .tagline{letter-spacing:.03em;font-size:13px;text-transform:none}
 .mast-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .langs{display:flex;gap:2px;border:1px solid var(--rule2);border-radius:999px;padding:3px;background:var(--surface)}
@@ -555,6 +564,23 @@ const NEWS = 'news@themelbourneindian.com.au';
 const PUBLIC_URL = 'https://themelbourneindian.com.au';
 const SHARE_T = { en: ['Share', 'Copy link', 'Link copied'], hi: ['शेयर करें', 'लिंक कॉपी करें', 'लिंक कॉपी हो गया'], pa: ['ਸਾਂਝਾ ਕਰੋ', 'ਲਿੰਕ ਕਾਪੀ ਕਰੋ', 'ਲਿੰਕ ਕਾਪੀ ਹੋ ਗਿਆ'] };
 const ADS = 'ads@themelbourneindian.com.au';
+const SUP_ONCE = 'https://buy.stripe.com/aFa9AU8QR4VUa1iaSlenS00';
+const SUP_MONTH = 'https://buy.stripe.com/6oU3cwebb9ca2yQe4xenS01';
+const SUP = {
+  en: { nav: 'Support us', title: 'Support independent news', dek: 'The Melbourne Indian is free to read, in English, Hindi and Punjabi. Reader support keeps it that way.',
+    p: ['We are a small, independent newsroom covering Melbourne\'s Indian communities every day: local and state news, visas and settling in, the election, sport and community life. There is no paywall, and no one tells us what to cover.', 'Your contribution pays for reporting, for producing every story in three languages, and for the costs of running the site.'],
+    month: 'Become a monthly supporter', monthSub: '$9.99 a month', once: 'Give once', onceSub: 'Any amount',
+    small: 'Payments are processed securely by Stripe. We never see your card details. The Melbourne Indian is not a registered charity, so contributions are not tax deductible. You can cancel monthly support at any time by emailing', boxT: 'Free news, kept free by readers', boxP: 'If this story helped you, help keep The Melbourne Indian going.', boxC: 'Support us' },
+  hi: { nav: 'सहयोग करें', title: 'स्वतंत्र पत्रकारिता का साथ दें', dek: 'द मेलबर्न इंडियन अंग्रेज़ी, हिंदी और पंजाबी में मुफ़्त पढ़ा जा सकता है। पाठकों का सहयोग इसे मुफ़्त बनाए रखता है।',
+    p: ['हम एक छोटा, स्वतंत्र न्यूज़रूम हैं जो हर दिन मेलबर्न के भारतीय समुदायों की ख़बरें देता है: स्थानीय और राज्य की ख़बरें, वीज़ा और नई ज़िंदगी बसाना, चुनाव, खेल और सामुदायिक जीवन। कोई पेवॉल नहीं, और हमें कोई नहीं बताता कि क्या छापना है।', 'आपका योगदान रिपोर्टिंग, हर ख़बर को तीन भाषाओं में तैयार करने और साइट चलाने के ख़र्च में काम आता है।'],
+    month: 'मासिक सहयोगी बनें', monthSub: '$9.99 हर महीने', once: 'एक बार दें', onceSub: 'कोई भी राशि',
+    small: 'भुगतान Stripe के ज़रिए सुरक्षित रूप से होता है। हम आपके कार्ड की जानकारी कभी नहीं देखते। द मेलबर्न इंडियन पंजीकृत चैरिटी नहीं है, इसलिए योगदान पर टैक्स छूट नहीं मिलती। मासिक सहयोग कभी भी रद्द करने के लिए ईमेल करें:', boxT: 'मुफ़्त ख़बरें, आपके सहयोग से', boxP: 'अगर यह ख़बर आपके काम आई, तो द मेलबर्न इंडियन को चलाए रखने में मदद करें।', boxC: 'सहयोग करें' },
+  pa: { nav: 'ਸਹਿਯੋਗ ਕਰੋ', title: 'ਆਜ਼ਾਦ ਪੱਤਰਕਾਰੀ ਦਾ ਸਾਥ ਦਿਓ', dek: 'ਦ ਮੈਲਬਰਨ ਇੰਡੀਅਨ ਅੰਗਰੇਜ਼ੀ, ਹਿੰਦੀ ਅਤੇ ਪੰਜਾਬੀ ਵਿੱਚ ਮੁਫ਼ਤ ਪੜ੍ਹਿਆ ਜਾ ਸਕਦਾ ਹੈ। ਪਾਠਕਾਂ ਦਾ ਸਹਿਯੋਗ ਇਸਨੂੰ ਮੁਫ਼ਤ ਰੱਖਦਾ ਹੈ।',
+    p: ['ਅਸੀਂ ਇੱਕ ਛੋਟਾ, ਆਜ਼ਾਦ ਨਿਊਜ਼ਰੂਮ ਹਾਂ ਜੋ ਹਰ ਰੋਜ਼ ਮੈਲਬਰਨ ਦੇ ਭਾਰਤੀ ਭਾਈਚਾਰਿਆਂ ਦੀਆਂ ਖ਼ਬਰਾਂ ਦਿੰਦਾ ਹੈ: ਸਥਾਨਕ ਅਤੇ ਸੂਬੇ ਦੀਆਂ ਖ਼ਬਰਾਂ, ਵੀਜ਼ਾ ਅਤੇ ਨਵੀਂ ਜ਼ਿੰਦਗੀ ਵਸਾਉਣਾ, ਚੋਣਾਂ, ਖੇਡਾਂ ਅਤੇ ਭਾਈਚਾਰਕ ਜੀਵਨ। ਕੋਈ ਪੇਅਵਾਲ ਨਹੀਂ, ਅਤੇ ਸਾਨੂੰ ਕੋਈ ਨਹੀਂ ਦੱਸਦਾ ਕਿ ਕੀ ਛਾਪਣਾ ਹੈ।', 'ਤੁਹਾਡਾ ਯੋਗਦਾਨ ਰਿਪੋਰਟਿੰਗ, ਹਰ ਖ਼ਬਰ ਨੂੰ ਤਿੰਨ ਭਾਸ਼ਾਵਾਂ ਵਿੱਚ ਤਿਆਰ ਕਰਨ ਅਤੇ ਸਾਈਟ ਚਲਾਉਣ ਦੇ ਖ਼ਰਚੇ ਵਿੱਚ ਕੰਮ ਆਉਂਦਾ ਹੈ।'],
+    month: 'ਮਹੀਨਾਵਾਰ ਸਹਿਯੋਗੀ ਬਣੋ', monthSub: '$9.99 ਹਰ ਮਹੀਨੇ', once: 'ਇੱਕ ਵਾਰ ਦਿਓ', onceSub: 'ਕੋਈ ਵੀ ਰਕਮ',
+    small: 'ਭੁਗਤਾਨ Stripe ਰਾਹੀਂ ਸੁਰੱਖਿਅਤ ਢੰਗ ਨਾਲ ਹੁੰਦਾ ਹੈ। ਅਸੀਂ ਤੁਹਾਡੇ ਕਾਰਡ ਦੀ ਜਾਣਕਾਰੀ ਕਦੇ ਨਹੀਂ ਦੇਖਦੇ। ਦ ਮੈਲਬਰਨ ਇੰਡੀਅਨ ਰਜਿਸਟਰਡ ਚੈਰਿਟੀ ਨਹੀਂ ਹੈ, ਇਸ ਲਈ ਯੋਗਦਾਨ \'ਤੇ ਟੈਕਸ ਛੋਟ ਨਹੀਂ ਮਿਲਦੀ। ਮਹੀਨਾਵਾਰ ਸਹਿਯੋਗ ਕਦੇ ਵੀ ਰੱਦ ਕਰਨ ਲਈ ਈਮੇਲ ਕਰੋ:', boxT: 'ਮੁਫ਼ਤ ਖ਼ਬਰਾਂ, ਤੁਹਾਡੇ ਸਹਿਯੋਗ ਨਾਲ', boxP: 'ਜੇ ਇਹ ਖ਼ਬਰ ਤੁਹਾਡੇ ਕੰਮ ਆਈ, ਤਾਂ ਦ ਮੈਲਬਰਨ ਇੰਡੀਅਨ ਨੂੰ ਚਲਦਾ ਰੱਖਣ ਵਿੱਚ ਮਦਦ ਕਰੋ।', boxC: 'ਸਹਿਯੋਗ ਕਰੋ' } };
+function supBtns(l) { const u = SUP[l] || SUP.en; return `<div class="sup-btns"><a class="sup-b sup-m" data-sup="monthly" href="${SUP_MONTH}" target="_blank" rel="noopener"><b>${esc(u.month)}</b><span>${esc(u.monthSub)}</span></a><a class="sup-b sup-o" data-sup="once" href="${SUP_ONCE}" target="_blank" rel="noopener"><b>${esc(u.once)}</b><span>${esc(u.onceSub)}</span></a></div>`; }
+function supBox(l) { const u = SUP[l] || SUP.en; return `<aside class="sup-box" aria-label="${esc(u.nav)}"><h2>${esc(u.boxT)}</h2><p>${esc(u.boxP)}</p><a class="btn" href="${href.page(l, 'support')}">${esc(u.boxC)}</a></aside>`; }
 
 const T = {
   en: {
@@ -795,7 +821,7 @@ function chrome(r, inner, opts = {}) {
   const draftbar = previewMode() ? `<div class="draftbar"><div class="wrap"><span class="badge b-draft">Preview</span> You are seeing drafts and held stories as editors see them. The public site shows approved stories only. <a href="${href.desk('stories')}">Back to the desk</a> <button class="btn sm ghost" data-act="exit-preview">Exit preview</button></div></div>` : '';
   return `${draftbar}
 <div class="util"><div class="wrap util-in"><div class="util-l"><strong>${esc(t.edition)}</strong><span>${esc(longDate(today(), l))}</span><span>${esc(t.free)}</span></div>
-<div class="util-r"><a class="util-search" href="${href.page(l, 'search')}" aria-label="Search"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg> Search</a><a class="util-sub" href="${href.page(l, 'newsletter')}">${esc(t.subscribe)}</a><a href="${href.page(l, 'directory')}">${esc(t.directory)}</a><a href="${href.page(l, 'advertise')}">${esc(t.advertise)}</a>${S.isEditor ? `<a class="desk-link" href="${href.desk()}">Newsroom desk</a>` : ''}</div></div></div>
+<div class="util-r"><a class="util-search" href="${href.page(l, 'search')}" aria-label="Search"><svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg> Search</a><a class="util-sup" href="${href.page(l, 'support')}">${esc((SUP[l] || SUP.en).nav)}</a><a class="util-sub" href="${href.page(l, 'newsletter')}">${esc(t.subscribe)}</a><a href="${href.page(l, 'directory')}">${esc(t.directory)}</a><a href="${href.page(l, 'advertise')}">${esc(t.advertise)}</a>${S.isEditor ? `<a class="desk-link" href="${href.desk()}">Newsroom desk</a>` : ''}</div></div></div>
 <header class="mast"><div class="wrap mast-in">
 <a class="identity" href="${href.home(l)}" aria-label="The Melbourne Indian home"><span class="brandmark" aria-hidden="true">m.</span><span><span class="brand" lang="en">The Melbourne <em>Indian.</em></span><span class="tagline">${esc(t.tagline)}</span></span></a>
 <nav class="edition-line" aria-label="Edition"><span class="ed-links">${LANGS.map((x, i) => `${i ? '<span class="ed-sep" aria-hidden="true">|</span>' : ''}<a href="${sw[x]}" lang="${x}"${x === l ? ' aria-current="true"' : ''}>${LANG_FULL[x]}</a>`).join('')}</span></nav>
@@ -808,7 +834,7 @@ ${ticker}
 <div class="foot-grid">
 <div><div class="foot-brand" lang="en">The Melbourne <em>Indian.</em></div><p>${esc(t.footAbout)}</p><p><a href="mailto:${NEWS}">${NEWS}</a><br><a href="mailto:${ADS}">${ADS}</a></p><p><a href="https://www.facebook.com/themelbourneindian" target="_blank" rel="noopener">${esc({ en: 'Follow us on Facebook', hi: 'फ़ेसबुक पर फ़ॉलो करें', pa: 'ਫੇਸਬੁੱਕ ਉੱਤੇ ਫਾਲੋ ਕਰੋ' }[l] || 'Follow us on Facebook')}</a></p></div>
 <div><h3>${esc(t.sections)}</h3><ul>${SECTIONS.map(s => `<li><a href="${href.sec(l, s)}">${esc(t.sec[s])}</a></li>`).join('')}</ul></div>
-<div><h3>${esc(t.publication)}</h3><ul><li><a href="${href.page(l, 'about')}">${esc(t.about)}</a></li><li><a href="${href.page(l, 'standards')}">${esc(t.standards)}</a></li><li><a href="${href.page(l, 'contact')}">${esc(t.contact)}</a></li><li><a href="${href.page(l, 'privacy')}">${esc({ en: 'Privacy', hi: 'गोपनीयता', pa: 'ਪਰਦੇਦਾਰੀ' }[l] || 'Privacy')}</a></li><li><a href="${href.page(l, 'newsletter')}">${esc(t.newsletter)}</a></li></ul></div>
+<div><h3>${esc(t.publication)}</h3><ul><li><a href="${href.page(l, 'about')}">${esc(t.about)}</a></li><li><a href="${href.page(l, 'standards')}">${esc(t.standards)}</a></li><li><a href="${href.page(l, 'contact')}">${esc(t.contact)}</a></li><li><a href="${href.page(l, 'privacy')}">${esc({ en: 'Privacy', hi: 'गोपनीयता', pa: 'ਪਰਦੇਦਾਰੀ' }[l] || 'Privacy')}</a></li><li><a href="${href.page(l, 'newsletter')}">${esc(t.newsletter)}</a></li><li><a href="${href.page(l, 'support')}">${esc((SUP[l] || SUP.en).nav)}</a></li></ul></div>
 <div><h3>${esc(t.workWith)}</h3><ul><li><a href="${href.page(l, 'advertise')}">${esc(t.advertise)}</a></li><li><a href="${href.page(l, 'directory')}">${esc(t.directory)}</a></li></ul><h3 style="margin-top:16px">${esc(t.editions)}</h3><ul>${LANGS.map(x => `<li><a href="${href.home(x)}" lang="${x}">${LANG_FULL[x]}</a></li>`).join('')}</ul></div>
 </div>
 <div class="foot-bottom"><span>© ${today().slice(0, 4)} The Melbourne Indian. Independent and free to read.</span></div>
@@ -930,7 +956,7 @@ function viewArticle(r) {
 <div class="byline"><span>${esc(t.by)} <strong>${esc(a.byline || 'The Melbourne Indian newsroom')}</strong></span><span class="tnum">${esc(longDate(a.date, l))}</span><span>${mins(a)} ${esc(t.min)}</span>${a.updated && a.updated.slice(0, 10) !== a.date ? `<span class="tnum">Updated ${esc(shortDate(a.updated.slice(0, 10), l))}</span>` : ''}${others ? `<span>${esc(t.otherLangs)}: ${others}</span>` : ''}</div>${share}</header>
 <div class="art-grid"><div class="art-main">${notInLang}${media(a, vl, '', true, true)}
 <div class="body" lang="${vl}">${bodyHtml(v.body, l, true)}</div>
-${readNext(a, l, more)}<div class="endmatter">${vl !== 'en' && t.translatedNote ? `<p class="muted">${esc(t.translatedNote)}</p>` : ''}${share}${srcs}${corr}<section><p class="muted">${esc(t.reportErr)} <a href="mailto:${NEWS}">${NEWS}</a></p></section></div></div>
+${a.status === 'published' ? supBox(l) : ''}${readNext(a, l, more)}<div class="endmatter">${vl !== 'en' && t.translatedNote ? `<p class="muted">${esc(t.translatedNote)}</p>` : ''}${share}${srcs}${corr}<section><p class="muted">${esc(t.reportErr)} <a href="mailto:${NEWS}">${NEWS}</a></p></section></div></div>
 <aside class="rail">${more.length ? `<div class="rail-box"><h2>${esc(t.moreIn)} ${esc(t.sec[a.section])}</h2><ul class="morelist">${more.map(x => `<li><a href="${href.art(l, x.slug)}" lang="${vlang(x, l)}">${esc(V(x, l).headline)}</a></li>`).join('')}</ul></div>` : ''}${a.section === 'sport' ? fixturesBox(l, 5) : ''}${adSlot('mrec', l, 4)}${dates.length ? `<div class="rail-box"><h2>${esc(t.dates)}</h2><ol class="datelist">${dates.map((d, i) => `<li style="--i:${i}"><span class="rd"><span class="rd-n">${pd(d.date).getUTCDate()}</span><span class="rd-m">${esc(MON3[pd(d.date).getUTCMonth()])}</span></span><span class="dl-t"><a href="${d.slug ? href.art(l, d.slug) : '#'}">${esc(d[l] || d.en)}</a>${dueTag(l, d.date)}</span></li>`).join('')}</ol></div>` : ''}</aside></div></div>`;
   document.title = `${v.headline} · The Melbourne Indian`;
   return chrome(r, html, { activeSec: a.section, switch: sw, scores: a.section === 'sport' });
@@ -1107,6 +1133,7 @@ function viewPage(r) {
   let main = '', side = adSlot('mrec', l, 5);
   if (p === 'about' || p === 'standards') main = `<h1>${esc(p === 'about' ? 'About us' : 'Editorial standards')}</h1>${pages[p] || ''}`;
   else if (p === 'advertise') { main = `<h1>Advertise with us</h1>${pages.advertise || ''}<h2>Send an enquiry</h2>${formHtml('enquiry')}`; side = `<div class="rail-box"><h2>Advertising</h2><p class="small">Email <a href="mailto:${ADS}">${ADS}</a></p></div>`; }
+  else if (p === 'support') { const u = SUP[l] || SUP.en; main = `<h1>${esc(u.title)}</h1><p class="dek">${esc(u.dek)}</p>${u.p.map(x => `<p>${esc(x)}</p>`).join('')}${supBtns(l)}<p class="small muted">${esc(u.small)} <a href="mailto:${NEWS}">${NEWS}</a></p>`; side = `<div class="rail-box"><h2>${esc(u.nav)}</h2><p class="small">${esc(u.dek)}</p></div>`; }
   else if (p === 'newsletter') main = `<h1>${esc(t.newsletter)}</h1><p class="dek">${esc(t.nlText)}</p>${formHtml('subscribe')}<p class="small muted" style="margin-top:12px">We use your email only to send the newsletter you chose. Every email has an unsubscribe link.</p>`;
   else if (p === 'contact') main = `<h1>${esc(t.contact)}</h1><p class="dek">News tips, corrections and feedback go to our editors.</p><div class="copybox" style="margin-bottom:8px"><span>News and corrections:</span><code>${NEWS}</code></div><div class="copybox" style="margin-bottom:22px"><span>Advertising:</span><code>${ADS}</code></div><h2>Send us a tip</h2>${formHtml('tip')}`;
   else if (p === 'directory') return (site.partial && !(site.directory || []).length) ? chrome(r, `<div class="wrap dir-page"><h1>${esc(t.directory)}</h1><p class="muted">Loading listings…</p></div>`, { switch: sw }) : viewDirectory(r, sw);
@@ -1606,8 +1633,10 @@ function pixelPage() {
     if (r.view === 'listing') window.fbq('trackCustom', 'DirectoryListingView', { listing: r.slug });
     else if (r.view === 'article') window.fbq('track', 'ViewContent', { content_ids: [r.slug], content_type: 'article', content_category: r.lang });
     else if (r.view === 'page' && r.page === 'advertise') window.fbq('trackCustom', 'AdvertisePageView', { lang: r.lang });
+    else if (r.view === 'page' && r.page === 'support') window.fbq('trackCustom', 'SupportPageView', { lang: r.lang });
   } catch {}
 }
+document.addEventListener('click', ev => { const a = ev.target && ev.target.closest && ev.target.closest('a[data-sup]'); if (a) pixelEvent('InitiateCheckout', { content_name: 'support-' + a.dataset.sup, currency: 'AUD', value: a.dataset.sup === 'monthly' ? 9.99 : 10 }); }, true);
 function pixelEvent(name, data, custom) { if (pixelOff() || !window.fbq) return; try { window.fbq(custom ? 'trackCustom' : 'track', name, data || {}); } catch {} }
 if (!pixelOff()) {
   !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
