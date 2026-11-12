@@ -983,7 +983,7 @@ async function submitForm(form) {
   }
   const honey = rec._honey; delete rec._honey;
   const thanks = `<p class="status ok">Thank you. We've received your ${esc(f.subject.toLowerCase())}.</p>`;
-  if (honey) { subDone(kind, form); form.reset(); out.innerHTML = thanks; return; }
+  if (honey) { form.reset(); out.innerHTML = thanks; return; }
   const body = Object.entries(rec).filter(([k]) => !['consent', 'consentText', 'status', 'page', 'submittedAt'].includes(k)).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join('\n');
   const btn = form.querySelector('button[type=submit]'); if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
   try {
@@ -1588,6 +1588,33 @@ if (!statsOff()) {
   sc.onload = statsPage; document.head.appendChild(sc);
   window.addEventListener('hashchange', () => setTimeout(statsPage, 50));
 }
+/* ================= Meta Pixel (ad measurement + retargeting; disclosed on the privacy page) ================= */
+const PIXEL_ID = '3668276636652761';
+let pixelLast = '';
+function pixelOff() {
+  if (!PIXEL_ID || S.isEditor || previewMode()) return true;
+  try { if (navigator.globalPrivacyControl) return true; } catch {}
+  try { if (/[?&]me=1\b/.test(location.search) || localStorage.getItem('umami.disabled')) return true; } catch {}
+  return false;
+}
+function pixelPage() {
+  if (pixelOff() || !window.fbq) return;
+  const r = route(); if (r.view === 'desk') return;
+  const u = statsUrl(r); if (u === pixelLast) return; pixelLast = u;
+  try {
+    window.fbq('track', 'PageView');
+    if (r.view === 'listing') window.fbq('trackCustom', 'DirectoryListingView', { listing: r.slug });
+    else if (r.view === 'article') window.fbq('track', 'ViewContent', { content_ids: [r.slug], content_type: 'article', content_category: r.lang });
+    else if (r.view === 'page' && r.page === 'advertise') window.fbq('trackCustom', 'AdvertisePageView', { lang: r.lang });
+  } catch {}
+}
+function pixelEvent(name, data, custom) { if (pixelOff() || !window.fbq) return; try { window.fbq(custom ? 'trackCustom' : 'track', name, data || {}); } catch {} }
+if (!pixelOff()) {
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  window.fbq('init', PIXEL_ID);
+  pixelPage();
+  window.addEventListener('hashchange', () => setTimeout(pixelPage, 60));
+}
 document.addEventListener('click', ev => {
   const a = ev.target.closest('a,button'); if (!a) return;
   const h = a.getAttribute('href') || '';
@@ -1601,9 +1628,11 @@ const lsGet = k => { try { return localStorage.getItem(k); } catch { return null
 const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
 let nudgeShown = false, nudgeTimer = null;
 function subDone(kind, form) {
+  if (kind === 'enquiry' || kind === 'listing') { pixelEvent('Lead', { content_name: kind === 'enquiry' ? 'advertising enquiry' : 'directory listing' }); return; }
   if (kind !== 'subscribe' && kind !== 'nudge') return;
   lsSet(NUDGE_SUB, new Date().toISOString());
   statsEvent('Subscribe', { where: kind === 'nudge' ? 'pop-up' : 'newsletter page', lang: route().lang });
+  pixelEvent('Subscribe', { content_name: 'newsletter' });
   const n = form.closest('.nudge');
   if (n) { n.classList.add('done'); setTimeout(() => nudgeHide(false), 4500); }
   else nudgeHide(false);
