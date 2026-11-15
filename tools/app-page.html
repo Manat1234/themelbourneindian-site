@@ -388,6 +388,9 @@ textarea{min-height:110px;resize:vertical}
 .hero-dot i{display:block;position:relative;height:3px;border-radius:2px;background:var(--rule2);overflow:hidden}
 .hero-dot i::after{content:"";position:absolute;inset:0;background:var(--saffron);transform:scaleX(0);transform-origin:left}
 .hero-dot[aria-current] i::after{animation:heroFill var(--hero-ms,7000ms) linear forwards}
+.hero-dot[aria-current] i{background:color-mix(in srgb,var(--saffron) 35%,var(--rule2));height:4px}
+.hero.paused .hero-dot[aria-current] i::after{transform:scaleX(1);animation:none}
+@media (max-width:820px){.hero-slide{align-content:start}}
 .hero.paused .hero-dot[aria-current] i::after,.hero.paused .hero-slide.is-on .media img{animation-play-state:paused}
 .hero.static .hero-dot[aria-current] i::after{animation:none;transform:scaleX(1)}
 @keyframes heroFill{to{transform:scaleX(1)}}
