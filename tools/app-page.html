@@ -879,7 +879,11 @@ function viewHome(r) {
   const newest = pool.filter(a => worthy(a) && (a.type || 'news') === 'news').sort((a, b) => pubAt(b) - pubAt(a))[0];
   // The newest news story with a photo always leads the carousel, whatever its priority; the other slides are 9-10 stories.
   const lead = pool.filter(a => hasImg(a) && (a.type || 'news') === 'news').sort((a, b) => pubAt(b) - pubAt(a))[0];
-  let leads = [...new Set([pinned, lead, newest, ...pool.filter(worthy).sort(byPri)])].filter(Boolean).slice(0, 4);
+  // Big stories (priority 9-10) only hold a carousel slot for 3 days; after that the newest stories with photos fill the slides,
+  // so the front of the site always looks current.
+  const recent = a => Date.now() - pubAt(a) < 72 * 3600e3;
+  const byNew = (a, b) => pubAt(b) - pubAt(a);
+  let leads = [...new Set([pinned, lead, newest && recent(newest) ? newest : null, ...pool.filter(a => worthy(a) && recent(a)).sort(byPri), ...pool.filter(hasImg).sort(byNew)])].filter(Boolean).slice(0, 4);
   if (leads.length < 2) leads = [...new Set([...leads, ...pool.filter(hasImg).sort(byPri)])].slice(0, 2);  // quiet day: never fewer than two slides
   const fresh = !!newest && Date.now() - pubAt(newest) < 24 * 3600e3;
   const flash = `<span class="flash is-live"><i aria-hidden="true"></i>${esc({ en: 'Just in', hi: 'अभी-अभी', pa: 'ਹੁਣੇ-ਹੁਣੇ' }[l] || 'Just in')}</span>`;
