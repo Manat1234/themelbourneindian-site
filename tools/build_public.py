@@ -73,14 +73,14 @@ def build_brand():
         im.save(P("og", "site.jpg"), "JPEG", quality=88)
     roundel(64).save(P("favicon.png")); pwa.build_icons(roundel, P)
 
-def head_tags(title, desc, url, image, kind="website", lang="en", extra=""):
+def head_tags(title, desc, url, image, kind="website", lang="en", extra="", robots="max-image-preview:large"):
     return (f'<base href="/"><title>{esc(title)}</title><meta name="description" content="{esc(desc)}">'
             f'<link rel="canonical" href="{esc(url)}"><meta property="og:site_name" content="{NAME}">'
             f'<meta property="og:type" content="{kind}"><meta property="og:title" content="{esc(title)}">'
             f'<meta property="og:description" content="{esc(desc)}"><meta property="og:url" content="{esc(url)}">'
             f'<meta property="og:image" content="{esc(image)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">'
             f'<meta property="og:locale" content="{LOCALE.get(lang, "en_AU")}"><meta name="twitter:card" content="summary_large_image">'
-            f'<meta name="robots" content="max-image-preview:large"><link rel="icon" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">'
+            f'<meta name="robots" content="{robots}"><link rel="icon" href="/favicon.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png">'
             f'<link rel="alternate" type="application/rss+xml" title="{NAME}" href="/feed.xml">{pwa.HEAD}{extra}')
 
 def clean_template(t):
@@ -197,9 +197,14 @@ def main():
         desc = f"{d.get('description', '').rstrip('.')}. {where}. Listed in The Melbourne Indian's directory of businesses and community organisations."
         extra = ('<script type="application/ld+json">' + json.dumps(ld, ensure_ascii=False).replace("<", "\\u003c") + "</script>"
                  + f"<script>if(!location.hash)history.replaceState(null,'',location.pathname+location.search+'#en-d-{sl}')</script>")
+        # Thin listings (only a name and suburb from a public list) read to Google as empty pages ("soft 404"), so they stay
+        # crawlable for readers but are kept out of the index and the sitemap until they have real details.
+        thin = not (d.get("phone") or d.get("website") or d.get("hours") or locs or any(x.get("phone") for x in d.get("locations") or [])
+                    or len(d.get("description", "")) >= 160 or d.get("claimed"))
         os.makedirs(P("directory", sl), exist_ok=True)
-        open(P("directory", sl, "index.html"), "w", encoding="utf-8").write(page(tpl, light(site, directory=True), head_tags(f"{d['business']}, {subs[0] if subs else 'Melbourne'} · Business directory · {NAME}", desc, url, SITE + "/og/site.jpg", extra=extra)))
-        urls.append((url, (d.get("updated") or "")[:10])); routes.append([f"directory/{sl}/index.html", f"en-d-{sl}"])
+        open(P("directory", sl, "index.html"), "w", encoding="utf-8").write(page(tpl, light(site, directory=True), head_tags(f"{d['business']}, {subs[0] if subs else 'Melbourne'} · Business directory · {NAME}", desc, url, SITE + "/og/site.jpg", extra=extra, robots="noindex,follow" if thin else "max-image-preview:large")))
+        if not thin: urls.append((url, (d.get("updated") or "")[:10]))
+        routes.append([f"directory/{sl}/index.html", f"en-d-{sl}"])
     if os.path.isdir(P("directory")):
         for x in os.listdir(P("directory")):
             if os.path.isdir(P("directory", x)) and x not in dkeep: shutil.rmtree(P("directory", x))
