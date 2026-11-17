@@ -326,19 +326,24 @@ function viewHome(r) {
   // so the front of the site always looks current.
   const recent = a => Date.now() - pubAt(a) < 72 * 3600e3;
   const byNew = (a, b) => pubAt(b) - pubAt(a);
-  let leads = [...new Set([pinned, lead, newest && recent(newest) ? newest : null, ...pool.filter(a => worthy(a) && recent(a)).sort(byPri), ...pool.filter(hasImg).sort(byNew)])].filter(Boolean).slice(0, 4);
-  if (leads.length < 2) leads = [...new Set([...leads, ...pool.filter(hasImg).sort(byPri)])].slice(0, 2);  // quiet day: never fewer than two slides
+  // Carousel rule (publisher, 17 Nov): nothing older than 3 days is ever shown automatically. Only stories that went live in
+  // the last 72 hours and have a photo are eligible: the pinned lead story (24 hours), then the newest news story, then
+  // priority 9-10 stories, then the newest of the rest. If nothing is that recent, the carousel is left out.
+  const recentHero = a => Date.now() - pubAt(a) < 72 * 3600e3;
+  const R = pool.filter(a => hasImg(a) && recentHero(a));
+  const leadR = R.filter(a => (a.type || 'news') === 'news').sort((a, b) => pubAt(b) - pubAt(a))[0];
+  let leads = [...new Set([pinned && recentHero(pinned) ? pinned : null, leadR, newest && recentHero(newest) ? newest : null, ...R.filter(worthy).sort(byPri), ...R.slice().sort((a, b) => pubAt(b) - pubAt(a))])].filter(Boolean).slice(0, 4);
   const fresh = !!newest && Date.now() - pubAt(newest) < 24 * 3600e3;
   const flash = `<span class="flash is-live"><i aria-hidden="true"></i>${esc({ en: 'Just in', hi: 'अभी-अभी', pa: 'ਹੁਣੇ-ਹੁਣੇ' }[l] || 'Just in')}</span>`;
   const latestTag = `<span class="flash"><i aria-hidden="true"></i>${esc(t.latest)}</span>`;
-  const slideTag = a => a === newest && fresh ? flash : a === pinned ? topTag : a === lead ? latestTag : '';
+  const slideTag = a => a === newest && fresh ? flash : a === pinned ? topTag : a === leadR ? latestTag : '';
   const topTag = `<span class="flash"><i aria-hidden="true"></i>${esc({ en: 'Top story', hi: 'मुख्य ख़बर', pa: 'ਮੁੱਖ ਖ਼ਬਰ' }[l] || 'Top story')}</span>`;
   const rest = pool.filter(a => !leads.includes(a));
   const seconds = rest.slice(0, 2);
   const latest = rest.slice(2, 6);
   const used = new Set([...leads, ...seconds, ...latest].map(a => a.slug));
   const heroLabel = { en: 'Top stories', hi: 'मुख्य ख़बरें', pa: 'ਮੁੱਖ ਖ਼ਬਰਾਂ' }[l] || 'Top stories';
-  const hero = `<div class="hero" data-hero aria-roledescription="carousel" aria-label="${esc(heroLabel)}"><div class="hero-track">${leads.map((a, i) => { const v = V(a, l), vl = vlang(a, l); return `<article class="lead-story hero-slide${i === 0 ? ' is-on' : ''}" ${secVar(a.section)} aria-roledescription="slide" aria-label="${i + 1} / ${leads.length}"${i ? ' aria-hidden="true" inert' : ''}><a class="story-link" href="${href.art(l, a.slug)}" tabindex="-1" aria-hidden="true">${media(a, vl, '', false, i === 0)}</a><div class="hero-txt">${slideTag(a)}${kicker(a, l)}<a class="story-link" href="${href.art(l, a.slug)}" lang="${vl}"><h2>${esc(v.headline)}</h2></a><p class="dek" lang="${vl}">${esc(v.dek)}</p>${meta(a, l)}</div></article>`; }).join('')}</div>${leads.length > 1 ? `<div class="hero-ctl"><button type="button" class="hero-btn" data-hero-act="prev" aria-label="Previous story">&#8249;</button><div class="hero-dots">${leads.map((a, i) => `<button type="button" class="hero-dot" data-hero-act="go" data-hero-i="${i}" aria-label="Story ${i + 1}: ${esc(V(a, l).headline)}"${i === 0 ? ' aria-current="true"' : ''}><i></i></button>`).join('')}</div><button type="button" class="hero-btn" data-hero-act="next" aria-label="Next story">&#8250;</button><button type="button" class="hero-btn hero-pause" data-hero-act="pause" aria-label="Pause rotation" aria-pressed="false">&#10074;&#10074;</button></div>` : ''}</div>`;
+  const hero = !leads.length ? '' : `<div class="hero" data-hero aria-roledescription="carousel" aria-label="${esc(heroLabel)}"><div class="hero-track">${leads.map((a, i) => { const v = V(a, l), vl = vlang(a, l); return `<article class="lead-story hero-slide${i === 0 ? ' is-on' : ''}" ${secVar(a.section)} aria-roledescription="slide" aria-label="${i + 1} / ${leads.length}"${i ? ' aria-hidden="true" inert' : ''}><a class="story-link" href="${href.art(l, a.slug)}" tabindex="-1" aria-hidden="true">${media(a, vl, '', false, i === 0)}</a><div class="hero-txt">${slideTag(a)}${kicker(a, l)}<a class="story-link" href="${href.art(l, a.slug)}" lang="${vl}"><h2>${esc(v.headline)}</h2></a><p class="dek" lang="${vl}">${esc(v.dek)}</p>${meta(a, l)}</div></article>`; }).join('')}</div>${leads.length > 1 ? `<div class="hero-ctl"><button type="button" class="hero-btn" data-hero-act="prev" aria-label="Previous story">&#8249;</button><div class="hero-dots">${leads.map((a, i) => `<button type="button" class="hero-dot" data-hero-act="go" data-hero-i="${i}" aria-label="Story ${i + 1}: ${esc(V(a, l).headline)}"${i === 0 ? ' aria-current="true"' : ''}><i></i></button>`).join('')}</div><button type="button" class="hero-btn" data-hero-act="next" aria-label="Next story">&#8250;</button><button type="button" class="hero-btn hero-pause" data-hero-act="pause" aria-label="Pause rotation" aria-pressed="false">&#10074;&#10074;</button></div>` : ''}</div>`;
   const dates = (site.dates || []).filter(d => d.date >= today()).slice(0, 6);
   let html = `<div class="wrap"><section class="front">
 <div class="lead-pkg">
