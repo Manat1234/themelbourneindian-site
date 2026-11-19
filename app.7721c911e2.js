@@ -395,6 +395,7 @@ function viewSection(r) {
 }
 const LIVE_T = { en: 'Live updates', hi: 'लाइव अपडेट', pa: 'ਲਾਈਵ ਅੱਪਡੇਟ' }, UPD_T = { en: 'Updated', hi: 'अपडेट', pa: 'ਅੱਪਡੇਟ' };
 const melTime = s => { try { const d = new Date(s); return d.toLocaleString('en-AU', { timeZone: 'Australia/Melbourne', hour: 'numeric', minute: '2-digit', day: 'numeric', month: 'short' }).replace(' am', 'am').replace(' pm', 'pm') + ' AEDT'; } catch (e) { return ''; } };
+const melYmd = s => { try { return new Date(s).toLocaleDateString('en-CA', { timeZone: 'Australia/Melbourne' }); } catch (e) { return String(s).slice(0, 10); } };
 function bodyHtml(blocks, l, withAd) {
   let out = '', paras = 0;
   for (const b of blocks || []) {
@@ -425,7 +426,7 @@ function viewArticle(r) {
   const notInLang = l !== vl ? `<p class="note" lang="${l}">${esc(t.enOnlyNote)}</p>` : '';
   const html = `${draftNote}<div class="wrap" ${secVar(a.section)}>
 <header class="art-head">${kicker(a, l)}<h1 lang="${vl}">${esc(v.headline)}</h1><p class="dek" lang="${vl}">${esc(v.dek)}</p>
-<div class="byline"><span>${esc(t.by)} <strong>${esc(a.byline || 'The Melbourne Indian newsroom')}</strong></span><span class="tnum">${esc(longDate(a.date, l))}</span><span>${mins(a)} ${esc(t.min)}</span>${a.live ? `<span class="live-badge">${esc(LIVE_T[l] || LIVE_T.en)}</span><span class="tnum">${esc((UPD_T[l] || UPD_T.en))} ${esc(melTime(a.updated))}</span>` : a.updated && a.updated.slice(0, 10) !== a.date ? `<span class="tnum">Updated ${esc(shortDate(a.updated.slice(0, 10), l))}</span>` : ''}${others ? `<span>${esc(t.otherLangs)}: ${others}</span>` : ''}</div>${share}</header>
+<div class="byline"><span>${esc(t.by)} <strong>${esc(a.byline || 'The Melbourne Indian newsroom')}</strong></span><span class="tnum">${esc(longDate(a.date, l))}</span><span>${mins(a)} ${esc(t.min)}</span>${a.live ? `<span class="live-badge">${esc(LIVE_T[l] || LIVE_T.en)}</span><span class="tnum">${esc((UPD_T[l] || UPD_T.en))} ${esc(melTime(a.updated))}</span>` : a.updated && melYmd(a.updated) > a.date ? `<span class="tnum">Updated ${esc(shortDate(melYmd(a.updated), l))}</span>` : ''}${others ? `<span>${esc(t.otherLangs)}: ${others}</span>` : ''}</div>${share}</header>
 <div class="art-grid"><div class="art-main">${notInLang}${media(a, vl, '', true, true)}
 <div class="body" lang="${vl}">${bodyHtml(v.body, l, true)}</div>
 ${a.status === 'published' ? supBox(l) : ''}${readNext(a, l, more)}<div class="endmatter">${vl !== 'en' && t.translatedNote ? `<p class="muted">${esc(t.translatedNote)}</p>` : ''}${share}${srcs}${corr}<section><p class="muted">${esc(t.reportErr)} <a href="mailto:${NEWS}">${NEWS}</a></p></section></div></div>
